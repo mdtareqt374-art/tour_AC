@@ -1,0 +1,6 @@
+{
+  "name": "ভ্রমণ হিসাব - Trip Expense Tracker",
+  "description": "সহজে ভ্রমণের খরচ ও হিসাব সংরক্ষণ, ক্যাটাগরিভিত্তিক ট্র্যাকিং, অফলাইন ব্যাকআপ এবং পিডিএফ রিপোর্ট ডাউনলোড করুন।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
