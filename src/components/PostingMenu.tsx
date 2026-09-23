@@ -19,8 +19,11 @@ import {
   ChevronDown,
   Sparkles,
   Layers,
-  FileText
+  FileText,
+  Smartphone,
+  Download
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 import {
   Trip,
   Expense,
@@ -135,8 +138,8 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
     }
 
     const finalTitle = description.trim() || (postingMode === 'income' 
-      ? (isInst ? 'দৈনিক আয় / চাঁদা' : 'ভ্রমণ তহবিল চাঁদা')
-      : (isInst ? 'দৈনিক পরিচালনা ব্যয়' : 'ভ্রমণ খরচ')
+      ? (isInst ? (isBn ? 'আয়' : 'Income') : (isBn ? 'আয়' : 'Income'))
+      : (isInst ? (isBn ? 'ব্যয়' : 'Expense') : (isBn ? 'ব্যয়' : 'Expense'))
     );
 
     if (postingMode === 'income') {
@@ -148,7 +151,7 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
         date: postingDate || todayStr,
         paymentMethod: paymentMethod,
         contributor: payerOrVendor.trim() || undefined,
-        notes: `পোস্টিং মেনু থেকে যুক্ত: ${description.trim()}`
+        notes: description.trim() || undefined
       });
       setShowNotification(
         isBn 
@@ -164,7 +167,7 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
         date: postingDate || todayStr,
         paymentMethod: paymentMethod,
         paidBy: payerOrVendor.trim() || undefined,
-        notes: `পোস্টিং মেনু থেকে যুক্ত: ${description.trim()}`
+        notes: description.trim() || undefined
       });
       setShowNotification(
         isBn 
@@ -356,39 +359,48 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
             onSubmit={handlePostSubmit}
             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs"
           >
-            {/* Header Row: Blue "বিবরণ" on left + [✓ আয়] [ব্যয়] toggle buttons on right */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800">
-              <div className="w-1/3 sm:w-1/4 bg-blue-600 text-white font-bold px-4 sm:px-6 py-3.5 flex items-center justify-center sm:justify-start text-sm sm:text-base tracking-wide">
+            {/* Header Row: Blue "বিবরণ" on left + Prominent Split [আয় (৫০%)] and [ব্যয় (৫০%)] buttons on right */}
+            <div className="flex flex-col sm:flex-row border-b border-slate-200 dark:border-slate-800">
+              <div className="sm:w-1/4 bg-blue-600 text-white font-bold px-4 sm:px-6 py-3.5 flex items-center justify-center sm:justify-start text-sm sm:text-base tracking-wide border-b sm:border-b-0 sm:border-r border-blue-700/50">
                 <span>{isBn ? 'বিবরণ' : 'Details'}</span>
               </div>
 
-              <div className="flex-1 bg-slate-50/70 dark:bg-slate-850 px-3 sm:px-5 py-2.5 flex items-center gap-2 justify-end sm:justify-start">
-                {/* [✓ আয়] Button */}
+              {/* Two equal halves (50% / 50%) large toggle options */}
+              <div className="flex-1 p-2 sm:p-2.5 bg-slate-100/80 dark:bg-slate-850/80 grid grid-cols-2 gap-2 sm:gap-3">
+                {/* [আয়] Option - Large Half */}
                 <button
                   type="button"
                   onClick={() => setPostingMode('income')}
-                  className={`inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                  className={`w-full py-3 sm:py-3.5 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     postingMode === 'income'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md ring-2 ring-emerald-500/50 scale-[1.01]'
+                      : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
                   }`}
                 >
-                  {postingMode === 'income' && <Check className="w-3.5 h-3.5" />}
-                  <span>{isBn ? 'আয়' : 'Income'}</span>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                    postingMode === 'income' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950'
+                  }`}>
+                    {postingMode === 'income' ? <Check className="w-3.5 h-3.5" /> : '+'}
+                  </span>
+                  <span className="tracking-wide">{isBn ? 'আয় (Income)' : 'Income'}</span>
                 </button>
 
-                {/* [ব্যয়] Button */}
+                {/* [ব্যয়] Option - Large Half */}
                 <button
                   type="button"
                   onClick={() => setPostingMode('expense')}
-                  className={`inline-flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                  className={`w-full py-3 sm:py-3.5 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     postingMode === 'expense'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md ring-2 ring-rose-500/50 scale-[1.01]'
+                      : 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/30'
                   }`}
                 >
-                  {postingMode === 'expense' && <Check className="w-3.5 h-3.5" />}
-                  <span>{isBn ? 'ব্যয়' : 'Expense'}</span>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                    postingMode === 'expense' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600 dark:bg-rose-950'
+                  }`}>
+                    {postingMode === 'expense' ? <Check className="w-3.5 h-3.5" /> : '−'}
+                  </span>
+                  <span className="tracking-wide">{isBn ? 'ব্যয় (Expense)' : 'Expense'}</span>
                 </button>
               </div>
             </div>
@@ -461,94 +473,6 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
               </div>
             </div>
 
-            {/* Row 4: Smart Category & Payment Method Pills */}
-            <div className="p-3 sm:p-4 bg-slate-50/40 dark:bg-slate-850/40 flex flex-wrap items-center justify-between gap-3 text-xs">
-              {/* Payment Method Selector */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-semibold text-slate-500 mr-1">
-                  {isBn ? 'পেমেন্ট মাধ্যম:' : 'Payment:'}
-                </span>
-                {PAYMENT_METHODS.map((method) => (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => setPaymentMethod(method.id as PaymentMethod)}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                      paymentMethod === method.id
-                        ? 'bg-blue-600 text-white font-bold'
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isBn ? method.nameBn : method.nameEn}
-                  </button>
-                ))}
-              </div>
-
-              {/* Category / Source Shortcuts */}
-              {postingMode === 'income' ? (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-slate-500 mr-1">
-                    {isBn ? 'উৎস:' : 'Source:'}
-                  </span>
-                  {[
-                    { id: 'contribution', label: isBn ? 'চাঁদা' : 'Contribution' },
-                    { id: 'donation', label: isBn ? 'অনুদান' : 'Donation' },
-                    { id: 'sales', label: isBn ? 'বিক্রয়' : 'Sales' },
-                    { id: 'sponsor', label: isBn ? 'স্পন্সর' : 'Sponsor' },
-                    { id: 'other', label: isBn ? 'অন্যান্য' : 'Other' }
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setIncomeSource(s.id as IncomeSource)}
-                      className={`px-2 py-0.5 rounded-md font-medium text-2xs transition-colors ${
-                        incomeSource === s.id
-                          ? 'bg-emerald-700 text-white'
-                          : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-slate-500 mr-1">
-                    {isBn ? 'খাত:' : 'Category:'}
-                  </span>
-                  {(isInst
-                    ? [
-                        { id: 'salary', label: isBn ? 'বেতন' : 'Salary' },
-                        { id: 'rent_utility', label: isBn ? 'ভাড়া/বিল' : 'Rent/Utility' },
-                        { id: 'office_supplies', label: isBn ? 'স্টেশনারি' : 'Supplies' },
-                        { id: 'food', label: isBn ? 'আপ্যায়ন' : 'Food' },
-                        { id: 'other', label: isBn ? 'অন্যান্য' : 'Other' }
-                      ]
-                    : [
-                        { id: 'food', label: isBn ? 'খাবার' : 'Food' },
-                        { id: 'transport', label: isBn ? 'যাতায়াত' : 'Transport' },
-                        { id: 'accommodation', label: isBn ? 'হোটেল' : 'Hotel' },
-                        { id: 'sightseeing', label: isBn ? 'দর্শনীয় স্থান' : 'Sightseeing' },
-                        { id: 'other', label: isBn ? 'অন্যান্য' : 'Other' }
-                      ]
-                  ).map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setExpenseCategory(c.id as ExpenseCategory)}
-                      className={`px-2 py-0.5 rounded-md font-medium text-2xs transition-colors ${
-                        expenseCategory === c.id
-                          ? 'bg-rose-700 text-white'
-                          : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                      }`}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* Error Message */}
             {errorMsg && (
               <div className="px-5 py-2 text-xs font-semibold text-rose-600 bg-rose-50 border-t border-rose-100">
@@ -558,82 +482,32 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
           </form>
 
           {/* Action Button on Bottom Right: [ ✈ পোস্টিং ] */}
-          <div className="flex justify-end pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            {/* Mobile App Install Prompt Badge */}
+            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs text-teal-800 dark:text-teal-200">
+              <img
+                src="/app-icon.jpg"
+                alt="App Icon"
+                className="w-7 h-7 rounded-lg object-cover shadow-2xs"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <span className="font-semibold">
+                {isBn ? 'মোবাইলে সহজে ব্যবহার করতে ইনস্টল করুন:' : 'Install for best mobile experience:'}
+              </span>
+              <PWAInstallButton language={language} variant="compact" />
+            </div>
+
             <button
               type="button"
               onClick={handlePostSubmit}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-base font-bold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-95"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-base font-bold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
               <Send className="w-4 h-4 -rotate-12" />
               <span>{isBn ? 'পোস্টিং' : 'Post Entry'}</span>
             </button>
           </div>
-
-          {/* Recent Postings Feed */}
-          {recentPostings.length > 0 && (
-            <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xs">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>{isBn ? 'সাম্প্রতিক পোস্টিং খতিয়ান' : 'Recent Postings'}</span>
-                </h4>
-                <span className="text-xs text-slate-500">
-                  {recentPostings.length} {isBn ? 'টি এন্ট্রি' : 'entries'}
-                </span>
-              </div>
-
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {recentPostings.map((item) => (
-                  <div key={item.id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className={`px-2 py-0.5 rounded-md font-bold text-2xs uppercase ${
-                          item.itemType === 'income'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                        }`}
-                      >
-                        {item.itemType === 'income' ? (isBn ? 'আয়' : 'INC') : (isBn ? 'ব্যয়' : 'EXP')}
-                      </span>
-                      <div className="min-w-0 truncate">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                          {item.itemType === 'income' ? (item as Income).title : (item as Expense).description}
-                        </div>
-                        <div className="text-slate-500 text-2xs truncate">
-                          {formatDisplayDate(item.date)}
-                          {(item as any).contributor && ` • দাতা: ${(item as any).contributor}`}
-                          {(item as any).paidBy && ` • প্রদানকারী: ${(item as any).paidBy}`}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        className={`font-bold text-sm ${
-                          item.itemType === 'income' ? 'text-emerald-600' : 'text-rose-600'
-                        }`}
-                      >
-                        {item.itemType === 'income' ? '+' : '-'}৳{item.amount.toLocaleString()}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(isBn ? 'এই পোস্টিংটি মুছে ফেলতে চান?' : 'Delete this entry?')) {
-                            if (item.itemType === 'income') onDeleteIncome(item.id);
-                            else onDeleteExpense(item.id);
-                          }
-                        }}
-                        className="text-slate-400 hover:text-rose-600 p-1 rounded-md"
-                        title={isBn ? 'মুছুন' : 'Delete'}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 

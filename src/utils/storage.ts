@@ -473,40 +473,12 @@ export function loadMembers(): CommitteeMember[] {
     const raw = rawGet(MEMBERS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-    return [
-      {
-        id: 'mem-1',
-        tripId: 'all',
-        name: 'আলহাজ্ব মো: রফিকুল ইসলাম',
-        role: 'সভাপতি / আহবায়ক',
-        phone: '01711-234567',
-        contributedAmount: 10000,
-        notes: 'আহ্বায়ক ও প্রধান উপদেষ্টা',
-        createdAt: Date.now() - 86400000 * 10
-      },
-      {
-        id: 'mem-2',
-        tripId: 'all',
-        name: 'মো: তারেক হোসেন',
-        role: 'সাধারণ সম্পাদক / সমন্বয়ক',
-        phone: '01819-345678',
-        contributedAmount: 5000,
-        notes: 'হিসাব ও ব্যবস্থাপনা দায়িত্ব',
-        createdAt: Date.now() - 86400000 * 8
-      },
-      {
-        id: 'mem-3',
-        tripId: 'all',
-        name: 'মো: আসিফ আহমেদ',
-        role: 'কোষাধ্যক্ষ / অর্থ সম্পাদক',
-        phone: '01912-456789',
-        contributedAmount: 5000,
-        notes: 'ক্যাশ ও ভাউচার তদারকি',
-        createdAt: Date.now() - 86400000 * 6
+      if (Array.isArray(parsed)) {
+        // Exclude legacy mock members
+        return parsed.filter((m) => !['mem-1', 'mem-2', 'mem-3'].includes(m.id));
       }
-    ];
+    }
+    return [];
   } catch {
     return [];
   }
@@ -528,21 +500,12 @@ export function loadProjects(): DevelopmentProject[] {
     const raw = rawGet(PROJECTS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-    return [
-      {
-        id: 'proj-1',
-        tripId: 'all',
-        title: 'প্রতিষ্ঠানের নতুন অফিস ডেকোরেশন ও সাইনবোর্ড',
-        cost: 25000,
-        status: 'ongoing',
-        startDate: '2026-03-01',
-        contractorOrLead: 'মর্ডান ইন্টেরিয়র',
-        notes: 'অফিস ফার্নিচার ও সাইনবোর্ড স্থাপন',
-        createdAt: Date.now() - 86400000 * 5
+      if (Array.isArray(parsed)) {
+        // Exclude legacy mock projects
+        return parsed.filter((p) => p.id !== 'proj-1');
       }
-    ];
+    }
+    return [];
   } catch {
     return [];
   }
@@ -631,6 +594,9 @@ export function resetToBlankState(): { trips: Trip[]; expenses: Expense[]; incom
   saveTrips(trips);
   saveExpenses(expenses);
   saveIncomes(incomes);
+  saveMembers([]);
+  saveProjects([]);
+  savePhotos([]);
   saveActiveTripId(blankTrip.id);
   rawSet(HAS_CUSTOM_DATA_KEY, 'true');
 

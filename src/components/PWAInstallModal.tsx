@@ -56,13 +56,46 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
 
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-5 text-sm text-slate-700 dark:text-slate-300">
+          {/* App Icon & Branding Showcase Card */}
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50/40 dark:from-teal-950/40 dark:via-emerald-950/30 dark:to-teal-950/40 border border-teal-200/80 dark:border-teal-800/80 shadow-xs">
+            <div className="relative shrink-0">
+              <img
+                src="/app-icon.jpg"
+                alt="ভ্রমণ হিসাব আইকন"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shadow-md shadow-teal-700/20 border-2 border-white dark:border-slate-800"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white text-[10px]">
+                ✓
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xs font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white uppercase tracking-wider">
+                  Mobile App
+                </span>
+                <span className="text-2xs font-medium text-emerald-700 dark:text-emerald-400">
+                  {isBn ? '১০০% ফ্রি ও অফলাইন' : '100% Free & Offline'}
+                </span>
+              </div>
+              <h4 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white mt-0.5 truncate">
+                {isBn ? 'ভ্রমণ ও প্রতিষ্ঠান হিসাব' : 'Trip & Institution Ledger'}
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                {isBn ? 'হোম স্ক্রিনে সুন্দর আইকনসহ যেকোনো ফোনে ইন্সটল করুন।' : 'Install directly to your home screen with a beautiful icon.'}
+              </p>
+            </div>
+          </div>
+
           {/* Quick Direct Install Button if supported */}
           {canPromptNative && onInstallNative && (
-            <div className="p-4 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-200 dark:border-teal-800 text-center space-y-3">
-              <p className="font-semibold text-teal-900 dark:text-teal-200">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-center space-y-3 shadow-md shadow-teal-700/25">
+              <p className="font-bold text-sm text-teal-50">
                 {isBn
-                  ? 'আপনার ব্রাউজার সরাসরি অটো ইনস্টলেশন সাপোর্ট করে!'
-                  : 'Your browser supports one-click native installation!'}
+                  ? 'এক ক্লিকেই আপনার ফোনে অ্যাপটি ইনস্টল করুন!'
+                  : 'Install this app to your device in one click!'}
               </p>
               <button
                 type="button"
@@ -70,10 +103,10 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
                   onInstallNative();
                   onClose();
                 }}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md shadow-teal-600/20 transition-all cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-teal-50 text-teal-900 font-extrabold text-sm sm:text-base shadow-sm active:scale-98 transition-all cursor-pointer"
               >
-                <Download className="w-4 h-4" />
-                <span>{isBn ? 'এখনই সরাসরি ইনস্টল করুন' : 'Install Now Directly'}</span>
+                <Download className="w-5 h-5 text-teal-600" />
+                <span>{isBn ? '📲 মোবাইলে ইনস্টল করুন (Install Now)' : '📲 Install to Phone Now'}</span>
               </button>
             </div>
           )}

@@ -52,8 +52,15 @@ export const AutoInstallBanner: React.FC<AutoInstallBannerProps> = ({ language }
       <div className="fixed bottom-3 sm:bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in slide-in-from-bottom-5 duration-300">
         <div className="bg-slate-900/95 dark:bg-slate-900/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-teal-500/30 backdrop-blur-md flex items-center justify-between gap-3">
           {/* App Icon */}
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-white shrink-0 shadow-sm shadow-teal-500/30">
-            <Smartphone className="w-6 h-6 text-white" />
+          <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-sm shadow-teal-500/30 border border-teal-400/40">
+            <img
+              src="/app-icon.jpg"
+              alt="App Icon"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
           </div>
 
           {/* Text description */}
