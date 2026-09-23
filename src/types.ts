@@ -97,11 +97,10 @@ export type Language = 'bn' | 'en';
 
 export type PostingMenuTab = 
   | 'committee'   // কমিটি
-  | 'map'         // ম্যাপ
   | 'income'      // আয়
   | 'expense'     // ব্যয়
   | 'posting'     // পোস্টিং
-  | 'donation'    // অনুদান
+  | 'report'      // রিপোর্ট (বছরভিত্তিক ও অডিট)
   | 'development' // উন্নয়ন
   | 'photos';     // ফটো
 

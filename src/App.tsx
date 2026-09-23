@@ -360,6 +360,9 @@ export default function App() {
     setTrips(blank.trips);
     setExpenses(blank.expenses);
     setIncomes(blank.incomes);
+    setMembers([]);
+    setProjects([]);
+    setPhotos([]);
     setActiveTripId(blank.trips[0].id);
     setSelectedCategory('all');
   };
@@ -434,30 +437,10 @@ export default function App() {
       )}
 
       {/* Main Content Dashboard */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
         {activeTrip ? (
           <>
-            {/* 1. Trip Summary & Stat Cards (with Income, Budget, Quick Add) */}
-            <TripSummaryCards
-              trip={activeTrip}
-              expenses={activeTripExpenses}
-              incomes={activeTripIncomes}
-              onOpenAddExpense={() => {
-                setEditingExpense(null);
-                setIsExpenseModalOpen(true);
-              }}
-              onOpenAddIncome={() => {
-                setEditingIncome(null);
-                setIsIncomeModalOpen(true);
-              }}
-              onOpenQuickBudget={() => setIsQuickBudgetModalOpen(true)}
-              onOpenReportModal={() => setIsReportModalOpen(true)}
-              onExportCSV={handleExportCurrentCSV}
-              language={language}
-            />
-
-            {/* 2. Top Posting & Navigation Menu (Exact layout from user's picture) */}
-            {/* [কমিটি] [ম্যাপ] [আয়] [ব্যয়] [পোস্টিং] [অনুদান] [উন্নয়ন] [ফটো] */}
+            {/* 1. Top Posting & Navigation Menu (Placed directly after "আমার হিসাব" / TripTabs as requested) */}
             <PostingMenu
               trip={activeTrip}
               expenses={expenses}
@@ -482,6 +465,25 @@ export default function App() {
               onAddPhoto={handleAddPhoto}
               onDeletePhoto={handleDeletePhoto}
               onOpenReportModal={() => setIsReportModalOpen(true)}
+              language={language}
+            />
+
+            {/* 2. Trip Summary & Stat Cards (with Income, Budget, Quick Add) */}
+            <TripSummaryCards
+              trip={activeTrip}
+              expenses={activeTripExpenses}
+              incomes={activeTripIncomes}
+              onOpenAddExpense={() => {
+                setEditingExpense(null);
+                setIsExpenseModalOpen(true);
+              }}
+              onOpenAddIncome={() => {
+                setEditingIncome(null);
+                setIsIncomeModalOpen(true);
+              }}
+              onOpenQuickBudget={() => setIsQuickBudgetModalOpen(true)}
+              onOpenReportModal={() => setIsReportModalOpen(true)}
+              onExportCSV={handleExportCurrentCSV}
               language={language}
             />
 

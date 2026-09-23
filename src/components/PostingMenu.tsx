@@ -5,10 +5,8 @@ import {
   Check,
   Plus,
   Users,
-  MapPin,
   TrendingUp,
   Receipt,
-  HeartHandshake,
   Hammer,
   Image as ImageIcon,
   DollarSign,
@@ -20,10 +18,14 @@ import {
   Sparkles,
   Layers,
   FileText,
-  Smartphone,
-  Download
+  BarChart3,
+  FileDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  Filter,
+  PieChart,
+  PiggyBank
 } from 'lucide-react';
-import { PWAInstallButton } from './PWAInstallButton';
 import {
   Trip,
   Expense,
@@ -81,6 +83,7 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
   onDeleteProject,
   onAddPhoto,
   onDeletePhoto,
+  onOpenReportModal,
   language
 }) => {
   const isBn = language === 'bn';
@@ -117,6 +120,10 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [photoTitle, setPhotoTitle] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+
+  // --- Year-based Report Filter State ---
+  const currentYear = new Date().getFullYear();
+  const [selectedReportYear, setSelectedReportYear] = useState<number | 'all'>(currentYear);
 
   // Format date helper: YYYY-MM-DD -> DD/MM/YYYY
   const formatDisplayDate = (dStr: string) => {
@@ -260,48 +267,62 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
     ...tripExpenses.map((e) => ({ ...e, itemType: 'expense' as const }))
   ].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
 
-  // Navigation Items matching the user's provided picture:
-  // [কমিটি] [ম্যাপ] [আয়] [ব্যয়] [পোস্টিং] [অনুদান] [উন্নয়ন] [ফটো]
-  const menuTabs: { id: PostingMenuTab; labelBn: string; labelEn: string; icon: any }[] = [
+  // Navigation Items: Row 1 (6 items) & Row 2 (Photos)
+  const row1Tabs: { id: PostingMenuTab; labelBn: string; labelEn: string; icon: any }[] = [
     { id: 'committee', labelBn: 'কমিটি', labelEn: 'Committee', icon: Users },
-    { id: 'map', labelBn: 'ম্যাপ', labelEn: 'Map', icon: MapPin },
     { id: 'income', labelBn: 'আয়', labelEn: 'Income', icon: TrendingUp },
     { id: 'expense', labelBn: 'ব্যয়', labelEn: 'Expense', icon: Receipt },
     { id: 'posting', labelBn: 'পোস্টিং', labelEn: 'Posting', icon: Send },
-    { id: 'donation', labelBn: 'অনুদান', labelEn: 'Donations', icon: HeartHandshake },
-    { id: 'development', labelBn: 'উন্নয়ন', labelEn: 'Development', icon: Hammer },
-    { id: 'photos', labelBn: 'ফটো', labelEn: 'Photos', icon: ImageIcon }
+    { id: 'report', labelBn: 'রিপোর্ট', labelEn: 'Report', icon: BarChart3 },
+    { id: 'development', labelBn: 'উন্নয়ন', labelEn: 'Development', icon: Hammer }
   ];
+
+  const photoTab = { id: 'photos' as PostingMenuTab, labelBn: 'ফটো', labelEn: 'Photos', icon: ImageIcon };
 
   const datePickerId = useId();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5 sm:space-y-4">
       {/* ========================================================
-          1. TOP PILL NAVIGATION BAR (EXACTLY AS IN USER'S PICTURE)
-          [কমিটি] [ম্যাপ] [আয়] [ব্যয়] [পোস্টিং] [অনুদান] [উন্নয়ন] [ফটো]
+          1. TOP PILL NAVIGATION BAR (MATCHING USER'S SCREENSHOT)
+          Row 1: [কমিটি] [আয়] [ব্যয়] [পোস্টিং] [রিপোর্ট] [উন্নয়ন]
+          Row 2: [ফটো]
          ======================================================== */}
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 sm:p-2.5 shadow-2xs">
-        <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
-          {menuTabs.map((item) => {
+      <div className="bg-[#0b1322] border border-slate-800/90 rounded-2xl p-2 sm:p-2.5 space-y-1.5 sm:space-y-2 shadow-2xs">
+        {/* Row 1: 6 buttons */}
+        <div className="grid grid-cols-6 gap-1 sm:gap-2">
+          {row1Tabs.map((item) => {
             const isActive = activeMenuTab === item.id;
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => onSelectMenuTab(item.id)}
-                className={`flex-1 min-w-[72px] sm:min-w-[86px] py-2 px-2.5 sm:px-3.5 rounded-xl font-bold text-xs sm:text-sm text-center transition-all ${
+                className={`py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm text-center transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-emerald-800 dark:bg-emerald-700 text-white shadow-sm ring-2 ring-emerald-600/30'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 shadow-2xs'
+                    ? 'bg-[#047857] text-white shadow-sm ring-1 ring-emerald-400/50'
+                    : 'bg-[#131d33] text-slate-200 border border-slate-700/60 hover:bg-[#1a2742]'
                 }`}
               >
-                <div className="flex items-center justify-center gap-1">
-                  <span>{isBn ? item.labelBn : item.labelEn}</span>
-                </div>
+                <span>{isBn ? item.labelBn : item.labelEn}</span>
               </button>
             );
           })}
+        </div>
+
+        {/* Row 2: ফটো (Full Width) */}
+        <div>
+          <button
+            type="button"
+            onClick={() => onSelectMenuTab(photoTab.id)}
+            className={`w-full py-2 px-3 rounded-xl font-bold text-xs sm:text-sm text-center transition-all cursor-pointer ${
+              activeMenuTab === photoTab.id
+                ? 'bg-[#047857] text-white shadow-sm ring-1 ring-emerald-400/50'
+                : 'bg-[#131d33] text-slate-200 border border-slate-700/60 hover:bg-[#1a2742]'
+            }`}
+          >
+            <span>{isBn ? photoTab.labelBn : photoTab.labelEn}</span>
+          </button>
         </div>
       </div>
 
@@ -309,18 +330,18 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
           2. POSTING VIEW (EXACTLY MATCHING USER'S SCREENSHOT)
          ======================================================== */}
       {activeMenuTab === 'posting' && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-3.5 sm:space-y-4 animate-fade-in">
           {/* Notification Toast */}
           {showNotification && (
-            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-sm font-semibold flex items-center justify-between shadow-xs">
+            <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-700 text-emerald-200 text-sm font-semibold flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                 <span>{showNotification}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowNotification(null)}
-                className="text-emerald-600 hover:text-emerald-800 text-xs font-bold"
+                className="text-emerald-400 hover:text-emerald-200 text-xs font-bold"
               >
                 ✕
               </button>
@@ -328,10 +349,10 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
           )}
 
           {/* Date Selector Card: [Icon] পোস্টিং তারিখ: [23/09/2026 ∨] */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-2xs">
+          <div className="bg-[#0b1322] border border-slate-800/90 rounded-2xl p-3.5 sm:p-4.5 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-2.5">
-              <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <span className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base">
+              <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
+              <span className="font-bold text-white text-sm sm:text-base">
                 {isBn ? 'পোস্টিং তারিখ:' : 'Posting Date:'}
               </span>
             </div>
@@ -347,9 +368,9 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
                 onChange={(e) => setPostingDate(e.target.value)}
                 className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
               />
-              <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold shadow-2xs hover:bg-slate-100 transition-colors pointer-events-none">
+              <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#131d33] border border-slate-700/60 text-slate-200 text-xs sm:text-sm font-bold shadow-2xs hover:bg-[#1a2742] transition-colors pointer-events-none">
                 <span>{formatDisplayDate(postingDate)}</span>
-                <ChevronDown className="w-4 h-4 text-slate-500" />
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </div>
             </div>
           </div>
@@ -357,61 +378,59 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
           {/* Main Posting Table / Form Card */}
           <form
             onSubmit={handlePostSubmit}
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs"
+            className="bg-[#0b1322] border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xs"
           >
-            {/* Header Row: Blue "বিবরণ" on left + Prominent Split [আয় (৫০%)] and [ব্যয় (৫০%)] buttons on right */}
-            <div className="flex flex-col sm:flex-row border-b border-slate-200 dark:border-slate-800">
-              <div className="sm:w-1/4 bg-blue-600 text-white font-bold px-4 sm:px-6 py-3.5 flex items-center justify-center sm:justify-start text-sm sm:text-base tracking-wide border-b sm:border-b-0 sm:border-r border-blue-700/50">
-                <span>{isBn ? 'বিবরণ' : 'Details'}</span>
-              </div>
+            {/* Header Row: Blue "বিবরণ" header across top */}
+            <div className="bg-[#0066ff] text-white font-bold py-2.5 sm:py-3 text-center text-sm sm:text-base tracking-wide shadow-sm">
+              <span>{isBn ? 'বিবরণ' : 'Details'}</span>
+            </div>
 
-              {/* Two equal halves (50% / 50%) large toggle options */}
-              <div className="flex-1 p-2 sm:p-2.5 bg-slate-100/80 dark:bg-slate-850/80 grid grid-cols-2 gap-2 sm:gap-3">
-                {/* [আয়] Option - Large Half */}
-                <button
-                  type="button"
-                  onClick={() => setPostingMode('income')}
-                  className={`w-full py-3 sm:py-3.5 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    postingMode === 'income'
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md ring-2 ring-emerald-500/50 scale-[1.01]'
-                      : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                    postingMode === 'income' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950'
-                  }`}>
-                    {postingMode === 'income' ? <Check className="w-3.5 h-3.5" /> : '+'}
-                  </span>
-                  <span className="tracking-wide">{isBn ? 'আয় (Income)' : 'Income'}</span>
-                </button>
+            {/* Two equal halves toggle options in contrasting container */}
+            <div className="p-2 sm:p-2.5 bg-slate-200 dark:bg-slate-800/80 grid grid-cols-2 gap-2 sm:gap-3">
+              {/* [আয়] Option */}
+              <button
+                type="button"
+                onClick={() => setPostingMode('income')}
+                className={`w-full py-2.5 sm:py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  postingMode === 'income'
+                    ? 'bg-[#059669] hover:bg-[#047857] text-white shadow-sm ring-1 ring-emerald-400/50'
+                    : 'bg-[#131d33] text-slate-300 border border-slate-700/50 hover:bg-[#1a2742]'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-2xs ${
+                  postingMode === 'income' ? 'bg-white/20 text-white' : 'bg-emerald-950 text-emerald-400'
+                }`}>
+                  <Check className="w-3 h-3" />
+                </span>
+                <span className="tracking-wide">{isBn ? 'আয় (Income)' : 'Income'}</span>
+              </button>
 
-                {/* [ব্যয়] Option - Large Half */}
-                <button
-                  type="button"
-                  onClick={() => setPostingMode('expense')}
-                  className={`w-full py-3 sm:py-3.5 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    postingMode === 'expense'
-                      ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md ring-2 ring-rose-500/50 scale-[1.01]'
-                      : 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/30'
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                    postingMode === 'expense' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600 dark:bg-rose-950'
-                  }`}>
-                    {postingMode === 'expense' ? <Check className="w-3.5 h-3.5" /> : '−'}
-                  </span>
-                  <span className="tracking-wide">{isBn ? 'ব্যয় (Expense)' : 'Expense'}</span>
-                </button>
-              </div>
+              {/* [ব্যয়] Option */}
+              <button
+                type="button"
+                onClick={() => setPostingMode('expense')}
+                className={`w-full py-2.5 sm:py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  postingMode === 'expense'
+                    ? 'bg-[#e11d48] hover:bg-rose-700 text-white shadow-sm ring-1 ring-rose-400/50'
+                    : 'bg-[#131d33] text-rose-400 border border-slate-700/50 hover:bg-[#1a2742]'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-2xs ${
+                  postingMode === 'expense' ? 'bg-white/20 text-white' : 'bg-rose-950 text-rose-400'
+                }`}>
+                  {postingMode === 'expense' ? <Check className="w-3 h-3" /> : '−'}
+                </span>
+                <span className="tracking-wide">{isBn ? 'ব্যয় (Expense)' : 'Expense'}</span>
+              </button>
             </div>
 
             {/* Row 1: টাকার পরিমাণ */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800">
-              <div className="w-1/3 sm:w-1/4 bg-slate-50/60 dark:bg-slate-850/60 px-4 sm:px-6 py-4 font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 flex items-center">
+            <div className="flex border-t border-b border-slate-800/90">
+              <div className="w-[110px] sm:w-[150px] bg-[#7b879c] dark:bg-[#6c788d] px-3.5 sm:px-5 py-3.5 font-bold text-white text-xs sm:text-sm border-r border-slate-700/50 flex items-center shrink-0">
                 <span>{isBn ? 'টাকার পরিমাণ' : 'Amount'}</span>
               </div>
-              <div className="flex-1 px-4 sm:px-6 py-2.5 flex items-center">
-                <span className="text-slate-400 dark:text-slate-500 font-bold text-base mr-2">
+              <div className="flex-1 px-3 sm:px-5 py-2.5 bg-[#0b1322] flex items-center">
+                <span className="text-slate-400 font-bold text-base mr-2">
                   ৳
                 </span>
                 <input
@@ -423,22 +442,22 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
                     if (errorMsg) setErrorMsg(null);
                   }}
                   placeholder={isBn ? 'টাকার পরিমাণ লিখুন' : 'Enter amount'}
-                  className="w-full bg-transparent text-slate-900 dark:text-slate-100 text-sm sm:text-base font-semibold placeholder:text-slate-400 placeholder:font-normal focus:outline-hidden py-1.5"
+                  className="w-full bg-transparent text-white text-sm sm:text-base font-semibold placeholder:text-slate-400 placeholder:font-normal focus:outline-hidden py-1"
                   required
                 />
               </div>
             </div>
 
             {/* Row 2: চাঁদা দাতার নাম (আয় হলে) অথবা পরিশোধকারী/ভেন্ডর (ব্যয় হলে) */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800">
-              <div className="w-1/3 sm:w-1/4 bg-slate-50/60 dark:bg-slate-850/60 px-4 sm:px-6 py-4 font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 flex items-center">
+            <div className="flex border-b border-slate-800/90">
+              <div className="w-[110px] sm:w-[150px] bg-[#7b879c] dark:bg-[#6c788d] px-3.5 sm:px-5 py-3.5 font-bold text-white text-xs sm:text-sm border-r border-slate-700/50 flex items-center shrink-0">
                 <span>
                   {postingMode === 'income'
                     ? (isBn ? 'চাঁদা দাতার নাম' : 'Donor / Payer Name')
                     : (isBn ? 'পরিশোধকারী / ভেন্ডর' : 'Paid By / Vendor')}
                 </span>
               </div>
-              <div className="flex-1 px-4 sm:px-6 py-2.5 flex items-center">
+              <div className="flex-1 px-3 sm:px-5 py-2.5 bg-[#0b1322] flex items-center">
                 <input
                   type="text"
                   value={payerOrVendor}
@@ -448,17 +467,17 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
                       ? (isBn ? 'চাঁদা দাতার নাম লিখুন (ঐচ্ছিক)' : 'Enter donor/payer name (optional)')
                       : (isBn ? 'পরিশোধকারী বা ভেন্ডরের নাম (ঐচ্ছিক)' : 'Enter paid by / vendor name (optional)')
                   }
-                  className="w-full bg-transparent text-slate-900 dark:text-slate-100 text-sm sm:text-base placeholder:text-slate-400 focus:outline-hidden py-1.5"
+                  className="w-full bg-transparent text-white text-sm sm:text-base placeholder:text-slate-400 focus:outline-hidden py-1"
                 />
               </div>
             </div>
 
             {/* Row 3: বিবরণ */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800">
-              <div className="w-1/3 sm:w-1/4 bg-slate-50/60 dark:bg-slate-850/60 px-4 sm:px-6 py-4 font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 flex items-center">
+            <div className="flex">
+              <div className="w-[110px] sm:w-[150px] bg-[#7b879c] dark:bg-[#6c788d] px-3.5 sm:px-5 py-3.5 font-bold text-white text-xs sm:text-sm border-r border-slate-700/50 flex items-center shrink-0">
                 <span>{isBn ? 'বিবরণ' : 'Description'}</span>
               </div>
-              <div className="flex-1 px-4 sm:px-6 py-2.5 flex items-center">
+              <div className="flex-1 px-3 sm:px-5 py-2.5 bg-[#0b1322] flex items-center">
                 <input
                   type="text"
                   value={description}
@@ -468,7 +487,7 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
                       ? (isBn ? 'আয়ের কারণ বা বিবরণ (যেমন: সদস্য চাঁদা, অনুদান, বিক্রয়...)' : 'Income details or reason...')
                       : (isBn ? 'ব্যয়ের কারণ বা বিবরণ (যেমন: বেতন, অফিস ভাড়া, নাস্তা, পরিবহন...)' : 'Expense details or reason...')
                   }
-                  className="w-full bg-transparent text-slate-900 dark:text-slate-100 text-sm sm:text-base placeholder:text-slate-400 focus:outline-hidden py-1.5"
+                  className="w-full bg-transparent text-white text-sm sm:text-base placeholder:text-slate-400 focus:outline-hidden py-1"
                 />
               </div>
             </div>
@@ -482,27 +501,11 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
           </form>
 
           {/* Action Button on Bottom Right: [ ✈ পোস্টিং ] */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            {/* Mobile App Install Prompt Badge */}
-            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs text-teal-800 dark:text-teal-200">
-              <img
-                src="/app-icon.jpg"
-                alt="App Icon"
-                className="w-7 h-7 rounded-lg object-cover shadow-2xs"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <span className="font-semibold">
-                {isBn ? 'মোবাইলে সহজে ব্যবহার করতে ইনস্টল করুন:' : 'Install for best mobile experience:'}
-              </span>
-              <PWAInstallButton language={language} variant="compact" />
-            </div>
-
+          <div className="flex justify-end pt-1">
             <button
               type="button"
               onClick={handlePostSubmit}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-base font-bold shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-[#0066ff] hover:bg-blue-600 active:bg-blue-700 text-white text-base font-bold shadow-lg shadow-blue-500/35 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
               <Send className="w-4 h-4 -rotate-12" />
               <span>{isBn ? 'পোস্টিং' : 'Post Entry'}</span>
@@ -659,120 +662,291 @@ export const PostingMenu: React.FC<PostingMenuProps> = ({
       )}
 
       {/* ========================================================
-          4. MAP VIEW (ম্যাপ ও লোকেশন)
+          4. ANNUAL & PERIODIC REPORT VIEW (বছরভিত্তিক অডিট ও রিপোর্ট)
          ======================================================== */}
-      {activeMenuTab === 'map' && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-2xs">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-rose-600" />
-                  <span>
-                    {isInst ? (isBn ? 'প্রতিষ্ঠানের অবস্থান ও ঠিকানা' : 'Institution Location') : (isBn ? 'ভ্রমণের গন্তব্য ও রুট ম্যাপ' : 'Trip Destination Map')}
-                  </span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {trip.destination || (isBn ? 'বাংলাদেশ' : 'Bangladesh')}
-                </p>
+      {activeMenuTab === 'report' && (() => {
+        // Collect all distinct years from incomes and expenses
+        const allYearsSet = new Set<number>();
+        allYearsSet.add(currentYear);
+        [...tripIncomes, ...tripExpenses].forEach((item) => {
+          if (item.date) {
+            const yr = parseInt(item.date.split('-')[0], 10);
+            if (!isNaN(yr)) allYearsSet.add(yr);
+          }
+        });
+        const sortedYears = Array.from(allYearsSet).sort((a, b) => b - a);
+
+        // Filter items based on selectedReportYear
+        const filteredIncomes = selectedReportYear === 'all'
+          ? tripIncomes
+          : tripIncomes.filter((i) => i.date && i.date.startsWith(`${selectedReportYear}-`));
+
+        const filteredExpenses = selectedReportYear === 'all'
+          ? tripExpenses
+          : tripExpenses.filter((e) => e.date && e.date.startsWith(`${selectedReportYear}-`));
+
+        const totalYearIncome = filteredIncomes.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+        const totalYearExpense = filteredExpenses.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+        const yearNetBalance = totalYearIncome - totalYearExpense;
+
+        // Month-by-month calculation for the selected year
+        const months = [
+          { num: '01', nameBn: 'জানুয়ারি', nameEn: 'Jan' },
+          { num: '02', nameBn: 'ফেব্রুয়ারি', nameEn: 'Feb' },
+          { num: '03', nameBn: 'মার্চ', nameEn: 'Mar' },
+          { num: '04', nameBn: 'এপ্রিল', nameEn: 'Apr' },
+          { num: '05', nameBn: 'মে', nameEn: 'May' },
+          { num: '06', nameBn: 'জুন', nameEn: 'Jun' },
+          { num: '07', nameBn: 'জুলাই', nameEn: 'Jul' },
+          { num: '08', nameBn: 'আগস্ট', nameEn: 'Aug' },
+          { num: '09', nameBn: 'সেপ্টেম্বর', nameEn: 'Sep' },
+          { num: '10', nameBn: 'অক্টোবর', nameEn: 'Oct' },
+          { num: '11', nameBn: 'নভেম্বর', nameEn: 'Nov' },
+          { num: '12', nameBn: 'ডিসেম্বর', nameEn: 'Dec' }
+        ];
+
+        const monthlyBreakdown = months.map((m) => {
+          const mIncomes = filteredIncomes.filter((i) => {
+            if (!i.date) return false;
+            const parts = i.date.split('-');
+            return parts[1] === m.num;
+          });
+          const mExpenses = filteredExpenses.filter((e) => {
+            if (!e.date) return false;
+            const parts = e.date.split('-');
+            return parts[1] === m.num;
+          });
+
+          const incSum = mIncomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+          const expSum = mExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+          const balance = incSum - expSum;
+
+          return {
+            ...m,
+            income: incSum,
+            expense: expSum,
+            balance,
+            hasData: incSum > 0 || expSum > 0
+          };
+        });
+
+        return (
+          <div className="space-y-4 animate-fade-in">
+            {/* Top Bar: Year Filter & Action Buttons */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-2xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base sm:text-lg flex items-center gap-2">
+                    <span>{isBn ? 'বছরভিত্তিক আয়-ব্যয় রিপোর্ট' : 'Annual Income & Expense Report'}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold">
+                      {selectedReportYear === 'all' ? (isBn ? 'সকল বছর' : 'All Time') : selectedReportYear}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {isBn ? 'প্রতি বছরের বার্ষিক ও মাসভিত্তিক ব্যালেন্স খতিয়ান' : 'Annual statement and monthly breakdown'}
+                  </p>
+                </div>
               </div>
 
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  trip.destination || 'Bangladesh'
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors"
-              >
-                <span>{isBn ? 'গুগল ম্যাপে দেখুন' : 'Open in Google Maps'}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-
-            {/* Embedded Interactive Map */}
-            <div className="w-full h-80 sm:h-96 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100">
-              <iframe
-                title="Location Map"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                loading="lazy"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                  trip.destination || 'Dhaka, Bangladesh'
-                )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          5. DONATION VIEW (অনুদান ও স্পনসর ফান্ড)
-         ======================================================== */}
-      {activeMenuTab === 'donation' && (
-        <div className="space-y-4 animate-fade-in">
-          {/* Donation Summary Card */}
-          <div className="bg-emerald-500/10 border border-emerald-200 dark:border-emerald-800/80 p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
-                {isBn ? 'মোট সংগৃহীত অনুদান ও সহায়তা ফান্ড' : 'Total Donations & Sponsorship'}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-200 mt-1">
-                ৳{totalDonations.toLocaleString()}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                {tripDonations.length} {isBn ? 'জন দাতা / কন্ট্রিবিউটর' : 'contributors'}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPostingMode('income');
-                setIncomeSource('donation');
-                onSelectMenuTab('posting');
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isBn ? '+ নতুন অনুদান পোস্টিং' : '+ Post Donation'}</span>
-            </button>
-          </div>
-
-          {/* Donation List */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xs">
-            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-3">
-              {isBn ? 'অনুদান দাতাদের তালিকা' : 'Donors & Contributors List'}
-            </h4>
-            {tripDonations.length === 0 ? (
-              <p className="text-xs text-slate-400 py-6 text-center">
-                {isBn ? 'এখনও কোনো অনুদান জমা হয়নি। পোস্টিং মেনু থেকে অনুদান যুক্ত করুন।' : 'No donations recorded yet.'}
-              </p>
-            ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {tripDonations.map((d) => (
-                  <div key={d.id} className="py-3 flex items-center justify-between gap-3 text-xs">
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                        {d.contributor || d.title}
-                      </div>
-                      <div className="text-slate-500 text-2xs mt-0.5">
-                        {formatDisplayDate(d.date)} • {d.title} • {d.paymentMethod}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-emerald-600 text-sm">
-                        ৳{d.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
+              {/* Year Selector Tabs */}
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-semibold px-2 text-slate-500 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5" />
+                  <span>{isBn ? 'বছর:' : 'Year:'}</span>
+                </span>
+                {sortedYears.map((yr) => (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => setSelectedReportYear(yr)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedReportYear === yr
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {yr}
+                  </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setSelectedReportYear('all')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    selectedReportYear === 'all'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {isBn ? 'সব' : 'All'}
+                </button>
               </div>
-            )}
+
+              {/* PDF Report Trigger Button */}
+              <button
+                type="button"
+                onClick={onOpenReportModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                <FileDown className="w-4 h-4" />
+                <span>{isBn ? 'পিডিএফ ডাউনলোড / প্রিন্ট' : 'PDF Download / Print'}</span>
+              </button>
+            </div>
+
+            {/* 3 Metric Cards: Total Income, Total Expense, Net Balance */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Income */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                  <span>{isBn ? 'মোট আয়' : 'Total Income'}</span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="mt-2 font-black text-2xl text-emerald-600">
+                  ৳{totalYearIncome.toLocaleString()}
+                </div>
+                <div className="text-2xs text-slate-400 mt-1">
+                  {filteredIncomes.length} {isBn ? 'টি এন্ট্রি' : 'entries'}
+                </div>
+              </div>
+
+              {/* Expense */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                  <span>{isBn ? 'মোট ব্যয়' : 'Total Expense'}</span>
+                  <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 flex items-center justify-center">
+                    <ArrowDownRight className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="mt-2 font-black text-2xl text-rose-600">
+                  ৳{totalYearExpense.toLocaleString()}
+                </div>
+                <div className="text-2xs text-slate-400 mt-1">
+                  {filteredExpenses.length} {isBn ? 'টি এন্ট্রি' : 'entries'}
+                </div>
+              </div>
+
+              {/* Net Balance / Surplus */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-2xs">
+                <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                  <span>{isBn ? 'নীট ব্যালেন্স / তহবিল' : 'Net Balance / Surplus'}</span>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                    yearNetBalance >= 0 ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
+                  }`}>
+                    <PiggyBank className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className={`mt-2 font-black text-2xl ${
+                  yearNetBalance >= 0 ? 'text-blue-600' : 'text-amber-600'
+                }`}>
+                  ৳{yearNetBalance.toLocaleString()}
+                </div>
+                <div className="text-2xs text-slate-400 mt-1">
+                  {yearNetBalance >= 0 ? (isBn ? 'উদ্বৃত্ত তহবিল' : 'Net Surplus') : (isBn ? 'ঘাটতি' : 'Deficit')}
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Statement Breakdown Table */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xs overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>
+                    {isBn
+                      ? `${selectedReportYear === 'all' ? 'সর্বমোট' : selectedReportYear + ' সালের'} মাসভিত্তিক খতিয়ান`
+                      : `Monthly Ledger Breakdown (${selectedReportYear})`}
+                  </span>
+                </h4>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold bg-slate-50 dark:bg-slate-850">
+                      <th className="py-2.5 px-3">{isBn ? 'মাস' : 'Month'}</th>
+                      <th className="py-2.5 px-3 text-right">{isBn ? 'আয় (টাকা)' : 'Income'}</th>
+                      <th className="py-2.5 px-3 text-right">{isBn ? 'ব্যয় (টাকা)' : 'Expense'}</th>
+                      <th className="py-2.5 px-3 text-right">{isBn ? 'ব্যালেন্স (উদ্বৃত্ত)' : 'Balance'}</th>
+                      <th className="py-2.5 px-3 text-center">{isBn ? 'অবস্থা' : 'Status'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {monthlyBreakdown.map((m) => (
+                      <tr
+                        key={m.num}
+                        className={`hover:bg-slate-50/80 dark:hover:bg-slate-850/50 transition-colors ${
+                          !m.hasData ? 'opacity-50' : ''
+                        }`}
+                      >
+                        <td className="py-3 px-3 font-semibold text-slate-900 dark:text-slate-200">
+                          {isBn ? m.nameBn : m.nameEn}
+                        </td>
+                        <td className="py-3 px-3 text-right font-medium text-emerald-600">
+                          {m.income > 0 ? `৳${m.income.toLocaleString()}` : '—'}
+                        </td>
+                        <td className="py-3 px-3 text-right font-medium text-rose-600">
+                          {m.expense > 0 ? `৳${m.expense.toLocaleString()}` : '—'}
+                        </td>
+                        <td className={`py-3 px-3 text-right font-bold ${
+                          m.balance > 0
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : m.balance < 0
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-400'
+                        }`}>
+                          {m.hasData ? `৳${m.balance.toLocaleString()}` : '—'}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {m.hasData ? (
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-2xs font-bold ${
+                              m.balance >= 0
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}>
+                              {m.balance >= 0 ? (isBn ? 'উদ্বৃত্ত' : 'Surplus') : (isBn ? 'ঘাটতি' : 'Deficit')}
+                            </span>
+                          ) : (
+                            <span className="text-2xs text-slate-400">
+                              {isBn ? 'কোন লেনদেন নেই' : 'No activity'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-slate-300 dark:border-slate-700 font-bold bg-slate-50/80 dark:bg-slate-850/80">
+                      <td className="py-3 px-3 text-slate-900 dark:text-white font-extrabold">
+                        {isBn ? 'মোট (সর্বমোট)' : 'Total'}
+                      </td>
+                      <td className="py-3 px-3 text-right text-emerald-700 dark:text-emerald-400 font-extrabold">
+                        ৳{totalYearIncome.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-right text-rose-700 dark:text-rose-400 font-extrabold">
+                        ৳{totalYearExpense.toLocaleString()}
+                      </td>
+                      <td className={`py-3 px-3 text-right font-extrabold ${
+                        yearNetBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-amber-700 dark:text-amber-400'
+                      }`}>
+                        ৳{yearNetBalance.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          {isBn ? 'বার্ষিক সামারি' : 'Summary'}
+                        </span>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ========================================================
           6. DEVELOPMENT VIEW (উন্নয়ন ও প্রজেক্ট ফান্ড)
