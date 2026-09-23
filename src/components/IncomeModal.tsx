@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, DollarSign, Calendar, CreditCard, User, AlignLeft, PiggyBank, Plus } from 'lucide-react';
+import { X, Check, DollarSign, Calendar, CreditCard, User, AlignLeft, PiggyBank, Building2, Compass, Plus } from 'lucide-react';
 import { Income, IncomeSource, PaymentMethod, Trip, Language } from '../types';
 import { PAYMENT_METHODS, INCOME_SOURCES } from '../constants/categories';
 
@@ -12,7 +12,7 @@ interface IncomeModalProps {
   language: Language;
 }
 
-const COMMON_INCOME_SUGGESTIONS = [
+const COMMON_TRIP_INCOME_SUGGESTIONS = [
   'সদস্যদের চাঁদা সংগ্রহ',
   'অতিরিক্ত বাজেট বৃদ্ধি',
   'জরুরি ব্যাকআপ ফান্ড',
@@ -20,6 +20,17 @@ const COMMON_INCOME_SUGGESTIONS = [
   'স্পনসর / উপহার',
   'হোটেল / বুকিং রিফান্ড',
   'ব্যক্তিগত কন্ট্রিবিউশন'
+];
+
+const COMMON_INSTITUTION_INCOME_SUGGESTIONS = [
+  'দৈনিক পণ্য বিক্রয় (Cash Sales)',
+  'মাসিক সার্ভিস বিল কালেকশন',
+  'ক্লায়েন্ট প্রজেক্ট পেমেন্ট',
+  'সদস্যদের মাসিক চাঁদা ও ফি',
+  'নতুন প্রজেক্ট বা কাজের অগ্রিম',
+  'সাধারণ অনুদান ও জাকাত',
+  'মালিকের অতিরিক্ত মূলধন বিনিয়োগ',
+  'ব্যাংক প্রফিট / লভ্যাংশ প্রাপ্তি'
 ];
 
 export const IncomeModal: React.FC<IncomeModalProps> = ({
@@ -31,10 +42,13 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
   language
 }) => {
   const isBn = language === 'bn';
+  const isInstitution = trip.type === 'institution' || trip.type === 'business';
+
+  const defaultSource: IncomeSource = isInstitution ? 'sales' : 'contribution';
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
-  const [source, setSource] = useState<IncomeSource>('contribution');
+  const [source, setSource] = useState<IncomeSource>(defaultSource);
   const [date, setDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [contributor, setContributor] = useState('');
@@ -45,7 +59,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
     if (initialIncome) {
       setTitle(initialIncome.title || '');
       setAmount(initialIncome.amount?.toString() || '');
-      setSource(initialIncome.source || 'contribution');
+      setSource(initialIncome.source || defaultSource);
       setDate(initialIncome.date || new Date().toISOString().split('T')[0]);
       setPaymentMethod(initialIncome.paymentMethod || 'cash');
       setContributor(initialIncome.contributor || '');
@@ -53,14 +67,14 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
     } else {
       setTitle('');
       setAmount('');
-      setSource('contribution');
+      setSource(defaultSource);
       setDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('cash');
       setContributor('');
       setNotes('');
     }
     setErrors({});
-  }, [initialIncome, isOpen]);
+  }, [initialIncome, isOpen, defaultSource]);
 
   if (!isOpen) return null;
 
@@ -69,7 +83,11 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!title.trim()) {
-      newErrors.title = isBn ? 'আয় বা ফান্ডের নাম/বিবরণ লিখুন' : 'Please enter income title';
+      newErrors.title = isBn
+        ? isInstitution
+          ? 'আয় বা কালেকশনের শিরোনাম লিখুন'
+          : 'আয় বা ফান্ডের নাম/বিবরণ লিখুন'
+        : 'Please enter title / description';
     }
 
     const numAmount = parseFloat(amount);
@@ -111,6 +129,8 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
     }
   };
 
+  const suggestions = isInstitution ? COMMON_INSTITUTION_INCOME_SUGGESTIONS : COMMON_TRIP_INCOME_SUGGESTIONS;
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div className="relative bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in duration-150">
@@ -118,16 +138,22 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-              <PiggyBank className="w-5 h-5" />
+              {isInstitution ? <Building2 className="w-5 h-5" /> : <PiggyBank className="w-5 h-5" />}
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">
                 {initialIncome
-                  ? (isBn ? 'আয় / ফান্ড সংশোধন করুন' : 'Edit Income Entry')
-                  : (isBn ? 'নতুন আয় বা বাজেট ফান্ড যোগ করুন' : 'Add Income / Fund Top-up')}
+                  ? (isBn ? 'আয় / কালেকশন সংশোধন করুন' : 'Edit Income Entry')
+                  : (isBn
+                    ? isInstitution
+                      ? 'প্রতিষ্ঠানের আয় বা কালেকশন যোগ করুন'
+                      : 'নতুন আয় বা বাজেট ফান্ড যোগ করুন'
+                    : 'Add Income / Collection')}
               </h3>
               <p className="text-xs text-slate-500">
-                {isBn ? `${trip.name} ভ্রমণের জন্য চাঁদা বা ফান্ড বৃদ্ধি` : `For ${trip.name}`}
+                {isBn
+                  ? isInstitution ? `প্রতিষ্ঠান: ${trip.name}` : `ভ্রমণ: ${trip.name}`
+                  : `Account: ${trip.name}`}
               </p>
             </div>
           </div>
@@ -149,7 +175,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
                 {isBn ? '💡 দ্রুত নির্বাচন করুন (Suggestions)' : 'Quick Suggestions'}
               </label>
               <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
-                {COMMON_INCOME_SUGGESTIONS.map((sug) => (
+                {suggestions.map((sug) => (
                   <button
                     key={sug}
                     type="button"
@@ -169,7 +195,9 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
           {/* Title */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isBn ? 'আয় / ফান্ডের নাম বা উৎস *' : 'Title / Source Description *'}
+              {isBn
+                ? isInstitution ? 'আয় / বিক্রয় / কালেকশনের বিবরণ *' : 'আয় / ফান্ডের নাম বা উৎস *'
+                : 'Title / Description *'}
             </label>
             <input
               type="text"
@@ -178,7 +206,13 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
                 setTitle(e.target.value);
                 if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
               }}
-              placeholder={isBn ? 'উদা: সদস্যদের চাঁদা বা অতিরিক্ত বাজেট ফান্ড' : 'e.g., Member Contribution, Extra Budget'}
+              placeholder={
+                isBn
+                  ? isInstitution
+                    ? 'উদা: দৈনিক ক্যাশ বিক্রয়, মাসিক সার্ভিস চার্জ, ক্লায়েন্ট অগ্রিম'
+                    : 'উদা: সদস্যদের চাঁদা বা অতিরিক্ত বাজেট ফান্ড'
+                  : 'e.g., Daily Sales, Service Invoice, Member Fee'
+              }
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white dark:bg-slate-950 focus:outline-hidden focus:ring-2 transition-all ${
                 errors.title
                   ? 'border-red-500 focus:ring-red-500/20'
@@ -241,7 +275,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               {isBn ? 'আয়ের ধরণ / উৎস ক্যাটাগরি *' : 'Income Category *'}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto pr-1">
               {INCOME_SOURCES.map((s) => {
                 const isSelected = source === s.id;
                 return (
@@ -304,10 +338,14 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
             </div>
           </div>
 
-          {/* Contributor / Depositor */}
+          {/* Contributor / Client / Member */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isBn ? 'প্রদানকারী / কার কাছ থেকে প্রাপ্ত (ঐচ্ছিক)' : 'Contributor / Received From (Optional)'}
+              {isBn
+                ? isInstitution
+                  ? 'প্রদানকারী / ক্লায়েন্ট / সদস্য (ঐচ্ছিক)'
+                  : 'প্রদানকারী / কার কাছ থেকে প্রাপ্ত (ঐচ্ছিক)'
+                : 'Payer / Client / Member (Optional)'}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -317,7 +355,13 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
                 type="text"
                 value={contributor}
                 onChange={(e) => setContributor(e.target.value)}
-                placeholder={isBn ? 'উদা: তারেক, আসিফ, বা সদস্যবৃন্দ' : 'e.g., Tareq, Asif, Group Fund'}
+                placeholder={
+                  isBn
+                    ? isInstitution
+                      ? 'উদা: রহিম অ্যান্ড সন্স, ক্লায়েন্ট কাস্টমার, সদস্য'
+                      : 'উদা: তারেক, আসিফ, বা সদস্যবৃন্দ'
+                    : 'e.g., Client Name, Member, Customer'
+                }
                 className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
               />
             </div>
@@ -336,7 +380,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                placeholder={isBn ? 'ট্রানজ্যাকশন আইডি, রেফারেন্স বা যেকোনো তথ্য...' : 'Transaction ID, references...'}
+                placeholder={isBn ? 'ইনভয়েস বা রসিদ নং, রেফারেন্স বা যেকোনো বিবরণ...' : 'Invoice no, reference, notes...'}
                 className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 resize-none"
               />
             </div>

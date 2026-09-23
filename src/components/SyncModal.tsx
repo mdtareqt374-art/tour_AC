@@ -8,7 +8,9 @@ import {
   AlertCircle,
   HardDrive,
   Cloud,
-  Check
+  Check,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { Trip, Expense, Income, Language } from '../types';
 import { exportBackupJSON, importBackupJSON } from '../utils/storage';
@@ -20,6 +22,8 @@ interface SyncModalProps {
   expenses: Expense[];
   incomes?: Income[];
   onRestoreData: (trips: Trip[], expenses: Expense[], incomes?: Income[]) => void;
+  onResetToBlank?: () => void;
+  onRestoreDemo?: () => void;
   language: Language;
 }
 
@@ -30,6 +34,8 @@ export const SyncModal: React.FC<SyncModalProps> = ({
   expenses,
   incomes = [],
   onRestoreData,
+  onResetToBlank,
+  onRestoreDemo,
   language
 }) => {
   const isBn = language === 'bn';
@@ -193,6 +199,65 @@ export const SyncModal: React.FC<SyncModalProps> = ({
                 onChange={handleFileChange}
                 className="hidden"
               />
+            </div>
+
+            {/* Clear Demo or Restore Demo Options */}
+            <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-wrap gap-2 mt-2">
+              {onResetToBlank && (
+                <button
+                  id="btn-reset-to-blank"
+                  type="button"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        isBn
+                          ? 'আপনি কি নিশ্চিত সব ডেমো তথ্য মুছে সম্পূর্ণ নতুনভাবে শুরু করতে চান?'
+                          : 'Are you sure you want to clear demo records and start fresh?'
+                      )
+                    ) {
+                      onResetToBlank();
+                      setSyncStatusMsg({
+                        type: 'success',
+                        text: isBn
+                          ? 'সব ডেমো তথ্য মুছে নতুন হিসাব তৈরি করা হয়েছে।'
+                          : 'Cleared demo data. Ready for fresh entries.'
+                      });
+                    }
+                  }}
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100/60 text-[11px] font-medium transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>{isBn ? 'ডেমো তথ্য মুছুন (নতুন শুরু)' : 'Clear Demo (Start Fresh)'}</span>
+                </button>
+              )}
+
+              {onRestoreDemo && (
+                <button
+                  id="btn-restore-demo"
+                  type="button"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        isBn
+                          ? 'নমুনা (সাজেক ও কক্সবাজার) ডেমো তথ্য ফিরিয়ে আনতে চান?'
+                          : 'Restore demo trips (Sajek & Cox\'s Bazar)?'
+                      )
+                    ) {
+                      onRestoreDemo();
+                      setSyncStatusMsg({
+                        type: 'success',
+                        text: isBn
+                          ? 'নমুনা ডেমো তথ্য সফলভাবে রিস্টোর করা হয়েছে।'
+                          : 'Sample demo data restored successfully.'
+                      });
+                    }
+                  }}
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 text-[11px] font-medium transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3 text-teal-600" />
+                  <span>{isBn ? 'নমুনা ডেটা দেখুন' : 'Restore Demo Data'}</span>
+                </button>
+              )}
             </div>
           </div>
 

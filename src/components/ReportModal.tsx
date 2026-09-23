@@ -92,7 +92,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
-                {isBn ? 'ভ্রমণের আয়-ব্যয় পূর্ণাঙ্গ রিপোর্ট' : 'Trip Financial Statement'}
+                {trip.type === 'institution' || trip.type === 'business'
+                  ? (isBn ? 'প্রতিষ্ঠানের পূর্ণাঙ্গ হিসাব খতিয়ান ও বিবরণী' : 'Institution Financial Statement')
+                  : (isBn ? 'ভ্রমণের আয়-ব্যয় পূর্ণাঙ্গ রিপোর্ট' : 'Trip Financial Statement')}
               </span>
               {downloadSuccess && (
                 <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">

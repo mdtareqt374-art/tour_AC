@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, DollarSign, Calendar, CreditCard, User, AlignLeft, Tag } from 'lucide-react';
+import { X, Check, DollarSign, Calendar, CreditCard, User, AlignLeft, Tag, Building2, Compass } from 'lucide-react';
 import { Expense, ExpenseCategory, PaymentMethod, Trip, Language } from '../types';
 import { CATEGORIES, PAYMENT_METHODS } from '../constants/categories';
 import { CategoryIcon } from './CategoryIcon';
@@ -13,7 +13,7 @@ interface ExpenseModalProps {
   language: Language;
 }
 
-const COMMON_SUGGESTIONS = [
+const COMMON_TRIP_SUGGESTIONS = [
   'বাস টিকিট',
   'ট্রেন টিকিট',
   'চাঁদের গাড়ি রিজার্ভ',
@@ -29,6 +29,21 @@ const COMMON_SUGGESTIONS = [
   'ফার্মেসি ও ঔষধ'
 ];
 
+const COMMON_INSTITUTION_SUGGESTIONS = [
+  'কর্মচারী/স্টাফ বেতন',
+  'অফিস/দোকান ভাড়া',
+  'বিদ্যুৎ বিল',
+  'ইন্টারনেট ও ডোমেইন বিল',
+  'মালামাল/পণ্য স্টক ক্রয়',
+  'স্টেশনারি ও খাতা-কলম',
+  'আপ্যায়ন ও চা-নাশতা',
+  'মেরামত ও সার্ভিসিং',
+  'বিজ্ঞাপন ও ফেসবুক বুস্টিং',
+  'পরিবহন ও কুরিয়ার ডেলিভারি',
+  'পরিচ্ছন্নতা ও টয়লেটিজ সামগ্রী',
+  'ট্যাক্স / ট্রেড লাইসেন্স ফি'
+];
+
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   isOpen,
   onClose,
@@ -38,10 +53,13 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   language
 }) => {
   const isBn = language === 'bn';
+  const isInstitution = trip.type === 'institution' || trip.type === 'business';
+
+  const defaultCategory: ExpenseCategory = isInstitution ? 'salary' : 'food';
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<ExpenseCategory>('food');
+  const [category, setCategory] = useState<ExpenseCategory>(defaultCategory);
   const [date, setDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [paidBy, setPaidBy] = useState('');
@@ -52,7 +70,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     if (initialExpense) {
       setDescription(initialExpense.description || '');
       setAmount(initialExpense.amount?.toString() || '');
-      setCategory(initialExpense.category || 'food');
+      setCategory(initialExpense.category || defaultCategory);
       setDate(initialExpense.date || new Date().toISOString().split('T')[0]);
       setPaymentMethod(initialExpense.paymentMethod || 'cash');
       setPaidBy(initialExpense.paidBy || '');
@@ -60,14 +78,14 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     } else {
       setDescription('');
       setAmount('');
-      setCategory('food');
+      setCategory(defaultCategory);
       setDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('cash');
       setPaidBy('');
       setNotes('');
     }
     setErrors({});
-  }, [initialExpense, isOpen]);
+  }, [initialExpense, isOpen, defaultCategory]);
 
   if (!isOpen) return null;
 
@@ -76,7 +94,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!description.trim()) {
-      newErrors.description = isBn ? 'খরচের বিবরণ বা নাম লিখুন' : 'Please enter description';
+      newErrors.description = isBn
+        ? isInstitution
+          ? 'খরচের বিবরণ বা ভাউচারের নাম লিখুন'
+          : 'খরচের বিবরণ বা নাম লিখুন'
+        : 'Please enter description';
     }
 
     const numAmount = parseFloat(amount);
@@ -109,24 +131,33 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     onClose();
   };
 
+  const suggestions = isInstitution ? COMMON_INSTITUTION_SUGGESTIONS : COMMON_TRIP_SUGGESTIONS;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {initialExpense
-                ? isBn
-                  ? 'খরচের তথ্য আপডেট করুন'
-                  : 'Update Expense'
-                : isBn
-                ? 'নতুন খরচ যুক্ত করুন'
-                : 'Add New Expense'}
-            </h3>
-            <p className="text-xs text-slate-500">
-              {isBn ? `ভ্রমণ: ${trip.name}` : `Trip: ${trip.name}`}
-            </p>
+          <div className="flex items-center gap-2.5">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white ${isInstitution ? 'bg-sky-600 shadow-sky-200' : 'bg-teal-600 shadow-teal-200'} shadow-xs`}>
+              {isInstitution ? <Building2 className="w-5 h-5" /> : <Compass className="w-5 h-5" />}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                {initialExpense
+                  ? isBn
+                    ? 'খরচের তথ্য আপডেট করুন'
+                    : 'Update Expense'
+                  : isBn
+                  ? isInstitution ? 'প্রতিষ্ঠানের খরচ যুক্ত করুন' : 'নতুন খরচ যুক্ত করুন'
+                  : 'Add New Expense'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {isBn
+                  ? isInstitution ? `প্রতিষ্ঠান: ${trip.name}` : `ভ্রমণ: ${trip.name}`
+                  : `Account: ${trip.name}`}
+              </p>
+            </div>
           </div>
           <button
             id="btn-close-expense-modal"
@@ -143,12 +174,20 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Description */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isBn ? 'খরচের বিবরণ / নাম *' : 'Description / Item *'}
+              {isBn
+                ? isInstitution ? 'খরচের বিবরণ / ভাউচার / খাতের নাম *' : 'খরচের বিবরণ / নাম *'
+                : 'Description / Item *'}
             </label>
             <input
               id="input-expense-description"
               type="text"
-              placeholder={isBn ? 'যেমন: বাস টিকিট, হোটেল বুকিং, সকালের নাস্তা...' : 'e.g., Bus tickets, Dinner, Hotel'}
+              placeholder={
+                isBn
+                  ? isInstitution
+                    ? 'যেমন: মে মাসের স্টাফ বেতন, দোকান ভাড়া, বিদ্যুৎ বিল, খাতা-কলম ক্রয়'
+                    : 'যেমন: বাস টিকিট, হোটেল বুকিং, সকালের নাস্তা...'
+                  : 'e.g., Staff salary, Office rent, Electricity bill...'
+              }
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className={`w-full px-3.5 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${
@@ -162,13 +201,13 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
             {/* Quick suggestion chips */}
             {!initialExpense && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {COMMON_SUGGESTIONS.slice(0, 6).map((chip) => (
+              <div className="flex flex-wrap gap-1.5 mt-2 max-h-24 overflow-y-auto">
+                {suggestions.map((chip) => (
                   <button
                     key={chip}
                     type="button"
                     onClick={() => setDescription(chip)}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 border border-transparent transition-colors"
+                    className="text-[11px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 border border-transparent transition-colors"
                   >
                     + {chip}
                   </button>
@@ -230,9 +269,9 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Category Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              {isBn ? 'খরচের ক্যাটাগরি *' : 'Expense Category *'}
+              {isBn ? 'খরচের খাত বা ক্যাটাগরি *' : 'Expense Category *'}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
               {CATEGORIES.map((cat) => {
                 const isSelected = category === cat.id;
                 return (
@@ -246,7 +285,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                         : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-800/60'
                     }`}
                   >
-                    <div className={`p-1.5 rounded-lg ${cat.bgClass} ${cat.colorClass}`}>
+                    <div className={`p-1.5 rounded-lg ${cat.bgClass} ${cat.colorClass} shrink-0`}>
                       <CategoryIcon category={cat.id} className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-xs font-bold truncate">
@@ -282,12 +321,14 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             {/* Paid by */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {isBn ? 'কে পরিশোধ করেছেন? (ঐচ্ছিক)' : 'Paid By (Optional)'}
+                {isBn
+                  ? isInstitution ? 'পরিশোধকারী / ক্যাশিয়ার (ঐচ্ছিক)' : 'কে পরিশোধ করেছেন? (ঐচ্ছিক)'
+                  : 'Paid By / In-charge (Optional)'}
               </label>
               <input
                 id="input-expense-paid-by"
                 type="text"
-                placeholder={isBn ? 'যেমন: তারেক, আসিফ' : 'e.g. Tareq, Asif'}
+                placeholder={isBn ? (isInstitution ? 'যেমন: ম্যানেজার, অ্যাকাউন্টস, ক্যাশিয়ার' : 'যেমন: তারেক, আসিফ') : 'e.g. Manager, Tareq'}
                 value={paidBy}
                 onChange={(e) => setPaidBy(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -298,12 +339,12 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Additional Notes */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {isBn ? 'অতিরিক্ত মন্তব্য বা নোট (ঐচ্ছিক)' : 'Notes / Reference (Optional)'}
+              {isBn ? 'ভাউচার নম্বর / নোট (ঐচ্ছিক)' : 'Voucher No / Notes (Optional)'}
             </label>
             <input
               id="input-expense-notes"
               type="text"
-              placeholder={isBn ? 'ভাউচার নং, অবস্থান বা বিশেষ নোট...' : 'Voucher no, shop name, etc.'}
+              placeholder={isBn ? 'ভাউচার নং #১০৪, দোকান বা সরবরাহকারী...' : 'Voucher #104, Supplier info...'}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"

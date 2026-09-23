@@ -68,17 +68,19 @@ export async function downloadTripPdf(
   container.innerHTML = `
     <div style="font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; background: #ffffff; color: #0f172a;">
       <!-- Header Banner -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0d9488; padding-bottom: 20px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid ${trip.type === 'institution' ? '#0284c7' : '#0d9488'}; padding-bottom: 20px; margin-bottom: 24px;">
         <div>
-          <div style="display: inline-block; background-color: #f0fdfa; color: #0d9488; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 8px; border: 1px solid #ccfbf1;">
-            ${isBn ? 'ভ্রমণ আয়-ব্যয় খতিয়ান ও বাজেট রিপোর্ট' : 'Trip Income, Expense & Budget Statement'}
+          <div style="display: inline-block; background-color: ${trip.type === 'institution' ? '#f0f9ff' : '#f0fdfa'}; color: ${trip.type === 'institution' ? '#0284c7' : '#0d9488'}; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 8px; border: 1px solid ${trip.type === 'institution' ? '#bae6fd' : '#ccfbf1'};">
+            ${trip.type === 'institution' || trip.type === 'business'
+              ? (isBn ? 'প্রতিষ্ঠানের আয়-ব্যয় খতিয়ান ও হিসাব বিবরণী' : 'Institutional Income, Expense & Ledger Statement')
+              : (isBn ? 'ভ্রমণ আয়-ব্যয় খতিয়ান ও বাজেট রিপোর্ট' : 'Trip Income, Expense & Budget Statement')}
           </div>
           <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 6px 0; color: #0f172a; line-height: 1.3;">
-            ${trip.name || (isBn ? 'ভ্রমণ হিসাব' : 'Trip Report')}
+            ${trip.name || (isBn ? 'হিসাব বিবরণী' : 'Financial Report')}
           </h1>
           <div style="font-size: 13px; color: #475569; display: flex; flex-wrap: wrap; gap: 16px;">
-            <span><strong>${isBn ? 'গন্তব্য:' : 'Destination:'}</strong> ${trip.destination || (isBn ? 'উল্লেখ নেই' : 'N/A')}</span>
-            ${trip.startDate ? `<span><strong>${isBn ? 'ভ্রমণের তারিখ:' : 'Dates:'}</strong> ${trip.startDate} ${trip.endDate ? `থেকে ${trip.endDate}` : ''}</span>` : ''}
+            <span><strong>${trip.type === 'institution' || trip.type === 'business' ? (isBn ? 'ঠিকানা/শাখা:' : 'Address/Branch:') : (isBn ? 'গন্তব্য:' : 'Destination:')}</strong> ${trip.destination || (isBn ? 'উল্লেখ নেই' : 'N/A')}</span>
+            ${trip.startDate ? `<span><strong>${trip.type === 'institution' || trip.type === 'business' ? (isBn ? 'হিসাবকাল:' : 'Fiscal Period:') : (isBn ? 'ভ্রমণের তারিখ:' : 'Dates:')}</strong> ${trip.startDate} ${trip.endDate ? `থেকে ${trip.endDate}` : ''}</span>` : ''}
           </div>
           ${trip.notes ? `<div style="font-size: 12px; color: #64748b; margin-top: 6px; font-style: italic;">${trip.notes}</div>` : ''}
         </div>

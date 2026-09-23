@@ -10,7 +10,9 @@ import {
   Check,
   Copy,
   ExternalLink,
-  Layers
+  Layers,
+  Smartphone,
+  Download
 } from 'lucide-react';
 import { Language } from '../types';
 
@@ -26,7 +28,7 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({
   language
 }) => {
   const isBn = language === 'bn';
-  const [activeDocTab, setActiveDocTab] = useState<'features' | 'github' | 'vercel' | 'offline' | 'supabase'>('features');
+  const [activeDocTab, setActiveDocTab] = useState<'features' | 'pwa' | 'github' | 'vercel' | 'offline' | 'supabase'>('features');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -79,6 +81,19 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({
             }`}
           >
             {isBn ? 'ফিচার নির্দেশিকা' : 'Features Overview'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveDocTab('pwa')}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
+              activeDocTab === 'pwa'
+                ? 'bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5 text-teal-600" />
+            <span>{isBn ? 'অ্যাপ অটো ইনস্টল (PWA)' : 'Auto Install (PWA)'}</span>
           </button>
 
           <button
@@ -168,6 +183,62 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({
                     : 'Instant one-click client-side PDF generation or high-resolution printable report.'}
                 </li>
               </ul>
+            </div>
+          )}
+
+          {/* Tab: PWA / Auto-Install */}
+          {activeDocTab === 'pwa' && (
+            <div className="space-y-4">
+              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-teal-600" />
+                {isBn ? 'ব্রাউজার থেকে স্বয়ংক্রিয় অ্যাপ ইনস্টল (PWA):' : 'Browser Auto-Install (PWA):'}
+              </h4>
+
+              <div className="p-3.5 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 rounded-xl border border-teal-200 dark:border-teal-800 text-teal-950 dark:text-teal-200">
+                <p className="font-bold text-sm">
+                  {isBn ? 'কীভাবে সরাসরি ব্রাউজার থেকে ইনস্টল হবে?' : 'How does automatic installation work?'}
+                </p>
+                <p className="text-xs mt-1 leading-relaxed">
+                  {isBn
+                    ? 'অ্যাপটিতে সম্পূর্ণ প্রগ্রেসিভ ওয়েব অ্যাপ (PWA) কনফিগারেশন, সার্ভিস ওয়ার্কার (Service Worker) এবং ওয়েব অ্যাপ ম্যানিফেস্ট (Manifest) সক্রিয় করা আছে। আপনি যখন ক্রোম, এজ বা সাফারি ব্রাউজার দিয়ে এই অ্যাপে ঢুকবেন, স্ক্রিনের নিচে স্বয়ংক্রিয়ভাবে "অ্যাপটি ফোনে ইনস্টল করুন" ব্যানার চলে আসবে। এছাড়াও উপরের মেনুতে "📲 অ্যাপ ইনস্টল" বাটন রয়েছে।'
+                    : 'The app is fully configured as a Progressive Web App (PWA) with Service Worker and Web App Manifest. Modern browsers automatically show the install prompt or you can tap the Install button.'}
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850">
+                  <h5 className="font-bold text-slate-900 dark:text-white text-xs mb-1">
+                    📱 {isBn ? 'অ্যান্ড্রয়েড ও ক্রোম (Android / Chrome / Samsung Internet):' : 'Android & Chrome:'}
+                  </h5>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {isBn
+                      ? 'অ্যাপের নিচে আসা ব্যানারে "ইনস্টল" বাটনে ক্লিক করুন অথবা ব্রাউজারের ৩-ডট (⋮) মেনু থেকে "Install app" নির্বাচন করুন। সাথে সাথে আপনার ফোনের অ্যাপ লিস্ট ও হোমস্ক্রিনে চলে আসবে।'
+                      : 'Click Install on the floating banner or tap the 3-dot menu > "Install app".'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850">
+                  <h5 className="font-bold text-slate-900 dark:text-white text-xs mb-1">
+                    🍎 {isBn ? 'আইফোন / আইপ্যাড (iPhone / iPad - Safari):' : 'iPhone / iPad (Safari):'}
+                  </h5>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {isBn
+                      ? 'সাফারি ব্রাউজারের নিচে শেয়ার বাটনে ট্যাপ করে "Add to Home Screen" নির্বাচন করুন। এটি আপনার আইফোনে সরাসরি নেটিভ অ্যাপ হিসেবে ইনস্টল হয়ে যাবে।'
+                      : 'Tap Share in Safari, scroll and tap "Add to Home Screen".'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850">
+                  <h5 className="font-bold text-slate-900 dark:text-white text-xs mb-1">
+                    💻 {isBn ? 'কম্পিউটার (Desktop Chrome / Edge / Brave):' : 'Desktop (Chrome / Edge):'}
+                  </h5>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {isBn
+                      ? 'অ্যাড্রেস বারের ডানপাশে থাকা ইনস্টল (⊕) বাটনে ক্লিক করলেই কম্পিউটার বা ল্যাপটপে আলাদা ডেস্কটপ অ্যাপ হিসেবে ওপেন হবে।'
+                      : 'Click the install icon (⊕) on the right side of the address bar.'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

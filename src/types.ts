@@ -1,3 +1,5 @@
+export type AccountType = 'trip' | 'institution' | 'business';
+
 export type ExpenseCategory = 
   | 'transport'
   | 'accommodation'
@@ -6,6 +8,13 @@ export type ExpenseCategory =
   | 'shopping'
   | 'activities'
   | 'medical'
+  | 'salary'          // বেতন ও স্টাফ সম্মানী
+  | 'rent_utility'    // ভাড়া ও ইউটিলিটি/বিদ্যুৎ বিল
+  | 'office_supplies' // অফিস সরঞ্জাম ও স্টেশনারি
+  | 'inventory'       // পণ্য ও কাঁচামাল ক্রয়
+  | 'maintenance'     // মেরামত ও সার্ভিসিং
+  | 'marketing'       // প্রচার ও বিজ্ঞাপন
+  | 'entertainment'   // আপ্যায়ন ও নাশতা
   | 'other';
 
 export type PaymentMethod = 'cash' | 'bkash' | 'nagad' | 'card' | 'bank' | 'other';
@@ -16,6 +25,10 @@ export type IncomeSource =
   | 'sponsor'         // স্পনসর / উপহার
   | 'savings'         // ব্যক্তিগত বা গ্রুপ ফান্ড
   | 'refund'          // ফেরত / রিফান্ড
+  | 'sales'           // পণ্য বা সেবা বিক্রয়
+  | 'service_fee'     // ফি, সার্ভিস চার্জ বা বিল
+  | 'donation'        // অনুদান, সাহায্য বা জাকাত
+  | 'investment'      // মূলধন বা শেয়ার বিনিয়োগ
   | 'other';          // অন্যান্য উৎস
 
 export interface Income {
@@ -49,8 +62,8 @@ export interface Expense {
 export interface Trip {
   id: string;
   name: string;
-  destination: string;
-  budget: number;
+  destination: string; // গন্তব্য অথবা প্রতিষ্ঠানের ঠিকানা/শাখা
+  budget: number; // বাজেট অথবা প্রারম্ভিক মূলধন
   currency: string;
   startDate: string;
   endDate: string;
@@ -58,6 +71,8 @@ export interface Trip {
   color?: string;
   createdAt: number;
   updatedAt: number;
+  type?: AccountType; // 'trip' | 'institution' | 'business'
+  institutionType?: string; // e.g., 'office', 'shop', 'school', 'club_ngo', 'factory', 'other'
 }
 
 export interface CategoryMeta {
@@ -79,3 +94,48 @@ export interface ExpenseFilter {
 }
 
 export type Language = 'bn' | 'en';
+
+export type PostingMenuTab = 
+  | 'committee'   // কমিটি
+  | 'map'         // ম্যাপ
+  | 'income'      // আয়
+  | 'expense'     // ব্যয়
+  | 'posting'     // পোস্টিং
+  | 'donation'    // অনুদান
+  | 'development' // উন্নয়ন
+  | 'photos';     // ফটো
+
+export interface CommitteeMember {
+  id: string;
+  tripId: string;
+  name: string;
+  role: string; // e.g., সভাপতি, সাধারণ সম্পাদক, ক্যাশিয়ার, সদস্য, ট্যুর লিডার
+  phone?: string;
+  contributedAmount?: number;
+  notes?: string;
+  createdAt: number;
+}
+
+export interface DevelopmentProject {
+  id: string;
+  tripId: string;
+  title: string;
+  cost: number;
+  status: 'planning' | 'ongoing' | 'completed';
+  startDate?: string;
+  completionDate?: string;
+  contractorOrLead?: string;
+  notes?: string;
+  createdAt: number;
+}
+
+export interface PhotoRecord {
+  id: string;
+  tripId: string;
+  title: string;
+  imageUrl: string;
+  date: string;
+  category?: string;
+  notes?: string;
+  createdAt: number;
+}

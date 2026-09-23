@@ -9,6 +9,7 @@ import {
   HardDriveDownload
 } from 'lucide-react';
 import { Language } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   language: Language;
@@ -48,13 +49,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 hidden md:block">
-                {isBn ? 'ভ্রমণের যাবতীয় খরচ ও বাজেট ট্র্যাকার' : 'Tour Expense & Budget Manager'}
+                {isBn ? 'ভ্রমণ ও প্রতিষ্ঠানের আয়-ব্যয় ও ক্যাশ ট্র্যাকার' : 'Trip & Institution Ledger Manager'}
               </p>
             </div>
           </div>
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* PWA Install Button */}
+            <PWAInstallButton language={language} variant="navbar" />
+
             {/* Language Toggle */}
             <button
               id="btn-language-toggle"
@@ -91,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">{isBn ? 'গাইড ও ডিপ্লয়' : 'Deploy & Guide'}</span>
             </button>
 
-            {/* New Trip Button */}
+            {/* New Tab Button */}
             <button
               id="btn-new-trip-navbar"
               type="button"
@@ -99,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>{isBn ? 'নতুন ভ্রমণ' : 'New Trip'}</span>
+              <span>{isBn ? '+ নতুন ট্যাব' : '+ New Tab'}</span>
             </button>
           </div>
         </div>

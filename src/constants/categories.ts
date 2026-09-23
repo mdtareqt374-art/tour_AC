@@ -1,6 +1,79 @@
 import { CategoryMeta, ExpenseCategory, PaymentMethod } from '../types';
 
 export const CATEGORIES: CategoryMeta[] = [
+  // Institutional / Business Categories
+  {
+    id: 'salary',
+    nameBn: 'বেতন ও স্টাফ সম্মানী',
+    nameEn: 'Salary & Staff Wages',
+    iconName: 'Briefcase',
+    colorClass: 'text-sky-600 dark:text-sky-400',
+    bgClass: 'bg-sky-50 dark:bg-sky-950/40',
+    borderClass: 'border-sky-200 dark:border-sky-800',
+    badgeClass: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200'
+  },
+  {
+    id: 'rent_utility',
+    nameBn: 'ভাড়া, বিদ্যুৎ ও বিল',
+    nameEn: 'Rent & Utilities',
+    iconName: 'Building2',
+    colorClass: 'text-violet-600 dark:text-violet-400',
+    bgClass: 'bg-violet-50 dark:bg-violet-950/40',
+    borderClass: 'border-violet-200 dark:border-violet-800',
+    badgeClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/60 dark:text-violet-200'
+  },
+  {
+    id: 'inventory',
+    nameBn: 'মালামাল ও স্টক ক্রয়',
+    nameEn: 'Inventory & Purchases',
+    iconName: 'Package',
+    colorClass: 'text-cyan-600 dark:text-cyan-400',
+    bgClass: 'bg-cyan-50 dark:bg-cyan-950/40',
+    borderClass: 'border-cyan-200 dark:border-cyan-800',
+    badgeClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200'
+  },
+  {
+    id: 'office_supplies',
+    nameBn: 'অফিস ও স্টেশনারি',
+    nameEn: 'Office & Stationery',
+    iconName: 'FileText',
+    colorClass: 'text-teal-600 dark:text-teal-400',
+    bgClass: 'bg-teal-50 dark:bg-teal-950/40',
+    borderClass: 'border-teal-200 dark:border-teal-800',
+    badgeClass: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200'
+  },
+  {
+    id: 'maintenance',
+    nameBn: 'মেরামত ও সার্ভিসিং',
+    nameEn: 'Maintenance & Repairs',
+    iconName: 'Wrench',
+    colorClass: 'text-amber-600 dark:text-amber-400',
+    bgClass: 'bg-amber-50 dark:bg-amber-950/40',
+    borderClass: 'border-amber-200 dark:border-amber-800',
+    badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200'
+  },
+  {
+    id: 'marketing',
+    nameBn: 'বিজ্ঞাপন ও প্রচার',
+    nameEn: 'Marketing & Ads',
+    iconName: 'Megaphone',
+    colorClass: 'text-fuchsia-600 dark:text-fuchsia-400',
+    bgClass: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
+    borderClass: 'border-fuchsia-200 dark:border-fuchsia-800',
+    badgeClass: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/60 dark:text-fuchsia-200'
+  },
+  {
+    id: 'entertainment',
+    nameBn: 'আপ্যায়ন ও চা-নাশতা',
+    nameEn: 'Refreshments & Tea',
+    iconName: 'Coffee',
+    colorClass: 'text-orange-600 dark:text-orange-400',
+    bgClass: 'bg-orange-50 dark:bg-orange-950/40',
+    borderClass: 'border-orange-200 dark:border-orange-800',
+    badgeClass: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200'
+  },
+
+  // Travel & General Categories
   {
     id: 'transport',
     nameBn: 'যাতায়াত ও ভ্রমণ',
@@ -108,29 +181,54 @@ export const INCOME_SOURCES: {
   nameEn: string;
   badgeClass: string;
 }[] = [
+  // Institutional Incomes
+  {
+    id: 'sales',
+    nameBn: 'পণ্য বা সেবা বিক্রয় (Sales)',
+    nameEn: 'Sales & Revenue',
+    badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200'
+  },
+  {
+    id: 'service_fee',
+    nameBn: 'ফি / সার্ভিস চার্জ / বিলিং',
+    nameEn: 'Fees & Service Charge',
+    badgeClass: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200'
+  },
   {
     id: 'contribution',
     nameBn: 'সদস্যদের চাঁদা / অংশীদারি',
     nameEn: 'Member Contribution',
-    badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200'
+    badgeClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200'
+  },
+  {
+    id: 'investment',
+    nameBn: 'মূলধন বা ব্যবসায়িক বিনিয়োগ',
+    nameEn: 'Capital & Investment',
+    badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200'
+  },
+  {
+    id: 'donation',
+    nameBn: 'অনুদান, জাকাত বা সহায়তা',
+    nameEn: 'Donation & Grants',
+    badgeClass: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200'
   },
   {
     id: 'budget_increase',
     nameBn: 'অতিরিক্ত বাজেট বৃদ্ধি',
     nameEn: 'Budget Top-up / Increase',
-    badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200'
+    badgeClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200'
   },
   {
     id: 'savings',
     nameBn: 'গ্রুপ বা ব্যক্তিগত ফান্ড',
     nameEn: 'Personal / Group Fund',
-    badgeClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200'
+    badgeClass: 'bg-violet-100 text-violet-800 dark:bg-violet-900/60 dark:text-violet-200'
   },
   {
     id: 'sponsor',
     nameBn: 'স্পনসর / উপহার',
     nameEn: 'Sponsor / Gift',
-    badgeClass: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200'
+    badgeClass: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/60 dark:text-fuchsia-200'
   },
   {
     id: 'refund',

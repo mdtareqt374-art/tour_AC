@@ -4,7 +4,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Trip, Expense, Income, Language } from './types';
+import {
+  Trip,
+  Expense,
+  Income,
+  Language,
+  AccountType,
+  PostingMenuTab,
+  CommitteeMember,
+  DevelopmentProject,
+  PhotoRecord
+} from './types';
 import {
   loadTrips,
   saveTrips,
@@ -14,11 +24,21 @@ import {
   saveIncomes,
   loadActiveTripId,
   saveActiveTripId,
+  loadMembers,
+  saveMembers,
+  loadProjects,
+  saveProjects,
+  loadPhotos,
+  savePhotos,
+  resetToBlankState,
+  restoreDemoData,
+  syncStorageWithIndexedDB,
   exportCSV
 } from './utils/storage';
 import { Navbar } from './components/Navbar';
 import { TripTabs } from './components/TripTabs';
 import { TripSummaryCards } from './components/TripSummaryCards';
+import { PostingMenu } from './components/PostingMenu';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
 import { ExpenseList } from './components/ExpenseList';
 import { ExpenseModal } from './components/ExpenseModal';
@@ -29,6 +49,8 @@ import { TripModal } from './components/TripModal';
 import { ReportModal } from './components/ReportModal';
 import { DocumentationModal } from './components/DocumentationModal';
 import { SyncModal } from './components/SyncModal';
+import { AutoInstallBanner } from './components/AutoInstallBanner';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { Receipt, PiggyBank, Layers, Plus } from 'lucide-react';
 
 export default function App() {
@@ -43,6 +65,13 @@ export default function App() {
   // Modal states
   const [isTripModalOpen, setIsTripModalOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [defaultTabTypeForModal, setDefaultTabTypeForModal] = useState<AccountType>('institution');
+
+  const handleOpenNewTripModal = (tabType: AccountType = 'institution') => {
+    setEditingTrip(null);
+    setDefaultTabTypeForModal(tabType);
+    setIsTripModalOpen(true);
+  };
 
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -55,6 +84,12 @@ export default function App() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+
+  // Posting Menu Tab & Additional Data state (Committee, Projects, Photos)
+  const [postingMenuTab, setPostingMenuTab] = useState<PostingMenuTab>('posting');
+  const [members, setMembers] = useState<CommitteeMember[]>(() => loadMembers());
+  const [projects, setProjects] = useState<DevelopmentProject[]>(() => loadProjects());
+  const [photos, setPhotos] = useState<PhotoRecord[]>(() => loadPhotos());
 
   // Synchronize state changes to localStorage
   useEffect(() => {
@@ -70,10 +105,35 @@ export default function App() {
   }, [incomes]);
 
   useEffect(() => {
+    saveMembers(members);
+  }, [members]);
+
+  useEffect(() => {
+    saveProjects(projects);
+  }, [projects]);
+
+  useEffect(() => {
+    savePhotos(photos);
+  }, [photos]);
+
+  useEffect(() => {
     if (activeTripId) {
       saveActiveTripId(activeTripId);
     }
   }, [activeTripId]);
+
+  // IndexedDB background hydration: guarantees persistence even across private tabs / partition clearing
+  useEffect(() => {
+    syncStorageWithIndexedDB((hydratedTrips, hydratedExpenses, hydratedIncomes) => {
+      if (hydratedTrips && hydratedTrips.length > 0) {
+        setTrips(hydratedTrips);
+        setExpenses(hydratedExpenses);
+        setIncomes(hydratedIncomes);
+        const targetTripId = loadActiveTripId(hydratedTrips);
+        setActiveTripId(targetTripId);
+      }
+    });
+  }, []);
 
   // Current active trip
   const activeTrip = trips.find((t) => t.id === activeTripId) || trips[0];
@@ -83,24 +143,26 @@ export default function App() {
   // If active trip was deleted or empty, set to first available trip
   useEffect(() => {
     if ((!activeTrip || !trips.some((t) => t.id === activeTripId)) && trips.length > 0) {
-      setActiveTripId(trips[0].id);
+      const fallbackId = trips[0].id;
+      setActiveTripId(fallbackId);
+      saveActiveTripId(fallbackId);
     }
   }, [trips, activeTripId, activeTrip]);
 
-  // Handle Trip Add / Update
+  // Handle Trip Add / Update with immediate synchronous save
   const handleSaveTrip = (
     tripData: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>,
     editId?: string
   ) => {
     if (editId) {
       // Update
-      setTrips((prev) =>
-        prev.map((t) =>
-          t.id === editId
-            ? { ...t, ...tripData, updatedAt: Date.now() }
-            : t
-        )
+      const updated = trips.map((t) =>
+        t.id === editId
+          ? { ...t, ...tripData, updatedAt: Date.now() }
+          : t
       );
+      setTrips(updated);
+      saveTrips(updated);
     } else {
       // Create new trip tab
       const newTripId = 'trip-' + Date.now();
@@ -110,25 +172,28 @@ export default function App() {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      setTrips((prev) => [...prev, newTrip]);
+      const updated = [...trips, newTrip];
+      setTrips(updated);
+      saveTrips(updated);
       setActiveTripId(newTripId);
+      saveActiveTripId(newTripId);
       setSelectedCategory('all');
     }
   };
 
-  // Handle Quick Budget Update (Direct budget update or increment)
+  // Handle Quick Budget Update (Direct budget update or increment) with immediate synchronous save
   const handleUpdateBudget = (newBudget: number) => {
     if (!activeTrip) return;
-    setTrips((prev) =>
-      prev.map((t) =>
-        t.id === activeTrip.id
-          ? { ...t, budget: newBudget, updatedAt: Date.now() }
-          : t
-      )
+    const updated = trips.map((t) =>
+      t.id === activeTrip.id
+        ? { ...t, budget: newBudget, updatedAt: Date.now() }
+        : t
     );
+    setTrips(updated);
+    saveTrips(updated);
   };
 
-  // Handle Trip Delete
+  // Handle Trip Delete with immediate synchronous save
   const handleDeleteTrip = (tripId: string) => {
     if (trips.length <= 1) {
       alert(
@@ -146,30 +211,39 @@ export default function App() {
 
     if (window.confirm(confirmMsg)) {
       const remainingTrips = trips.filter((t) => t.id !== tripId);
+      const remainingExpenses = expenses.filter((e) => e.tripId !== tripId);
+      const remainingIncomes = incomes.filter((i) => i.tripId !== tripId);
+
       setTrips(remainingTrips);
-      setExpenses((prev) => prev.filter((e) => e.tripId !== tripId));
-      setIncomes((prev) => prev.filter((i) => i.tripId !== tripId));
+      setExpenses(remainingExpenses);
+      setIncomes(remainingIncomes);
+
+      saveTrips(remainingTrips);
+      saveExpenses(remainingExpenses);
+      saveIncomes(remainingIncomes);
 
       if (activeTripId === tripId) {
-        setActiveTripId(remainingTrips[0]?.id || '');
+        const nextActiveId = remainingTrips[0]?.id || '';
+        setActiveTripId(nextActiveId);
+        saveActiveTripId(nextActiveId);
       }
     }
   };
 
-  // Handle Expense Add / Update
+  // Handle Expense Add / Update with immediate synchronous save
   const handleSaveExpense = (
     expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>,
     editId?: string
   ) => {
     if (editId) {
       // Update
-      setExpenses((prev) =>
-        prev.map((e) =>
-          e.id === editId
-            ? { ...e, ...expenseData, updatedAt: Date.now() }
-            : e
-        )
+      const updated = expenses.map((e) =>
+        e.id === editId
+          ? { ...e, ...expenseData, updatedAt: Date.now() }
+          : e
       );
+      setExpenses(updated);
+      saveExpenses(updated);
     } else {
       // Add new
       const newExp: Expense = {
@@ -178,29 +252,33 @@ export default function App() {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      setExpenses((prev) => [newExp, ...prev]);
+      const updated = [newExp, ...expenses];
+      setExpenses(updated);
+      saveExpenses(updated);
     }
   };
 
-  // Handle Expense Delete
+  // Handle Expense Delete with immediate synchronous save
   const handleDeleteExpense = (expenseId: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+    const updated = expenses.filter((e) => e.id !== expenseId);
+    setExpenses(updated);
+    saveExpenses(updated);
   };
 
-  // Handle Income Add / Update
+  // Handle Income Add / Update with immediate synchronous save
   const handleSaveIncome = (
     incomeData: Omit<Income, 'id' | 'createdAt' | 'updatedAt'>,
     editId?: string
   ) => {
     if (editId) {
       // Update
-      setIncomes((prev) =>
-        prev.map((i) =>
-          i.id === editId
-            ? { ...i, ...incomeData, updatedAt: Date.now() }
-            : i
-        )
+      const updated = incomes.map((i) =>
+        i.id === editId
+          ? { ...i, ...incomeData, updatedAt: Date.now() }
+          : i
       );
+      setIncomes(updated);
+      saveIncomes(updated);
     } else {
       // Add new
       const newInc: Income = {
@@ -209,28 +287,108 @@ export default function App() {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      setIncomes((prev) => [newInc, ...prev]);
+      const updated = [newInc, ...incomes];
+      setIncomes(updated);
+      saveIncomes(updated);
     }
   };
 
-  // Handle Income Delete
+  // Handle Income Delete with immediate synchronous save
   const handleDeleteIncome = (incomeId: string) => {
-    setIncomes((prev) => prev.filter((i) => i.id !== incomeId));
+    const updated = incomes.filter((i) => i.id !== incomeId);
+    setIncomes(updated);
+    saveIncomes(updated);
   };
 
-  // Handle Restore
+  // Committee Member Handlers
+  const handleAddMember = (memberData: Omit<CommitteeMember, 'id' | 'createdAt'>) => {
+    const newMember: CommitteeMember = {
+      ...memberData,
+      id: 'mem-' + Date.now(),
+      createdAt: Date.now()
+    };
+    const updated = [newMember, ...members];
+    setMembers(updated);
+    saveMembers(updated);
+  };
+
+  const handleDeleteMember = (memberId: string) => {
+    const updated = members.filter((m) => m.id !== memberId);
+    setMembers(updated);
+    saveMembers(updated);
+  };
+
+  // Development Project Handlers
+  const handleAddProject = (projectData: Omit<DevelopmentProject, 'id' | 'createdAt'>) => {
+    const newProject: DevelopmentProject = {
+      ...projectData,
+      id: 'proj-' + Date.now(),
+      createdAt: Date.now()
+    };
+    const updated = [newProject, ...projects];
+    setProjects(updated);
+    saveProjects(updated);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    const updated = projects.filter((p) => p.id !== projectId);
+    setProjects(updated);
+    saveProjects(updated);
+  };
+
+  // Photo / Receipt Handlers
+  const handleAddPhoto = (photoData: Omit<PhotoRecord, 'id' | 'createdAt'>) => {
+    const newPhoto: PhotoRecord = {
+      ...photoData,
+      id: 'photo-' + Date.now(),
+      createdAt: Date.now()
+    };
+    const updated = [newPhoto, ...photos];
+    setPhotos(updated);
+    savePhotos(updated);
+  };
+
+  const handleDeletePhoto = (photoId: string) => {
+    const updated = photos.filter((p) => p.id !== photoId);
+    setPhotos(updated);
+    savePhotos(updated);
+  };
+
+  // Handle Start Fresh / Reset to Blank
+  const handleResetToBlank = () => {
+    const blank = resetToBlankState();
+    setTrips(blank.trips);
+    setExpenses(blank.expenses);
+    setIncomes(blank.incomes);
+    setActiveTripId(blank.trips[0].id);
+    setSelectedCategory('all');
+  };
+
+  // Handle Restore Demo Data
+  const handleRestoreDemo = () => {
+    const demo = restoreDemoData();
+    setTrips(demo.trips);
+    setExpenses(demo.expenses);
+    setIncomes(demo.incomes);
+    setActiveTripId(demo.trips[0].id);
+    setSelectedCategory('all');
+  };
+
+  // Handle Restore Backup
   const handleRestoreData = (newTrips: Trip[], newExpenses: Expense[], newIncomes?: Income[]) => {
     setTrips(newTrips);
     setExpenses(newExpenses);
-    if (newIncomes) {
-      setIncomes(newIncomes);
-      saveIncomes(newIncomes);
-    }
-    if (newTrips.length > 0) {
-      setActiveTripId(newTrips[0].id);
-    }
+    const incs = newIncomes || [];
+    setIncomes(incs);
+
     saveTrips(newTrips);
     saveExpenses(newExpenses);
+    saveIncomes(incs);
+
+    if (newTrips.length > 0) {
+      setActiveTripId(newTrips[0].id);
+      saveActiveTripId(newTrips[0].id);
+    }
   };
 
   // Handle Export CSV
@@ -248,10 +406,7 @@ export default function App() {
       <Navbar
         language={language}
         onLanguageChange={setLanguage}
-        onOpenNewTripModal={() => {
-          setEditingTrip(null);
-          setIsTripModalOpen(true);
-        }}
+        onOpenNewTripModal={() => handleOpenNewTripModal('institution')}
         onOpenDocModal={() => setIsDocModalOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
         tripCount={trips.length}
@@ -266,16 +421,14 @@ export default function App() {
             setActiveTripId(id);
             setSelectedCategory('all');
           }}
-          onOpenNewTripModal={() => {
-            setEditingTrip(null);
-            setIsTripModalOpen(true);
-          }}
+          onOpenNewTripModal={handleOpenNewTripModal}
           onEditTrip={(trip) => {
             setEditingTrip(trip);
             setIsTripModalOpen(true);
           }}
           onDeleteTrip={handleDeleteTrip}
           expenses={expenses}
+          incomes={incomes}
           language={language}
         />
       )}
@@ -303,83 +456,37 @@ export default function App() {
               language={language}
             />
 
-            {/* View Sub-navigation Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 pt-2">
-              <div className="flex items-center gap-1.5 p-1 bg-slate-200/70 dark:bg-slate-800/80 rounded-xl text-xs sm:text-sm font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setActiveViewTab('all')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                    activeViewTab === 'all'
-                      ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-400 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>{isBn ? 'সম্পূর্ণ বিবরণ (All)' : 'Overview'}</span>
-                </button>
+            {/* 2. Top Posting & Navigation Menu (Exact layout from user's picture) */}
+            {/* [কমিটি] [ম্যাপ] [আয়] [ব্যয়] [পোস্টিং] [অনুদান] [উন্নয়ন] [ফটো] */}
+            <PostingMenu
+              trip={activeTrip}
+              expenses={expenses}
+              incomes={incomes}
+              members={members}
+              projects={projects}
+              photos={photos}
+              activeMenuTab={postingMenuTab}
+              onSelectMenuTab={(tab) => {
+                setPostingMenuTab(tab);
+                if (tab === 'expense') setActiveViewTab('expenses');
+                else if (tab === 'income') setActiveViewTab('incomes');
+              }}
+              onAddExpense={(data) => handleSaveExpense(data)}
+              onAddIncome={(data) => handleSaveIncome(data)}
+              onDeleteExpense={handleDeleteExpense}
+              onDeleteIncome={handleDeleteIncome}
+              onAddMember={handleAddMember}
+              onDeleteMember={handleDeleteMember}
+              onAddProject={handleAddProject}
+              onDeleteProject={handleDeleteProject}
+              onAddPhoto={handleAddPhoto}
+              onDeletePhoto={handleDeletePhoto}
+              onOpenReportModal={() => setIsReportModalOpen(true)}
+              language={language}
+            />
 
-                <button
-                  type="button"
-                  onClick={() => setActiveViewTab('expenses')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                    activeViewTab === 'expenses'
-                      ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-400 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <Receipt className="w-3.5 h-3.5" />
-                  <span>
-                    {isBn ? 'খরচের তালিকা' : 'Expenses'} ({activeTripExpenses.length})
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveViewTab('incomes')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-                    activeViewTab === 'incomes'
-                      ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <PiggyBank className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>
-                    {isBn ? 'আয় ও ফান্ড বৃদ্ধি' : 'Income & Funds'} ({activeTripIncomes.length})
-                  </span>
-                </button>
-              </div>
-
-              {/* Quick Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingIncome(null);
-                    setIsIncomeModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-xs font-bold transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isBn ? '+ আয় যোগ' : '+ Income'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingExpense(null);
-                    setIsExpenseModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800/80 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-100 text-xs font-bold transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isBn ? '+ খরচ যোগ' : '+ Expense'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Income Section (When 'all' or 'incomes') */}
-            {(activeViewTab === 'all' || activeViewTab === 'incomes') && (
+            {/* Income Section (When in 'income' tab) */}
+            {postingMenuTab === 'income' && (
               <IncomeList
                 trip={activeTrip}
                 incomes={activeTripIncomes}
@@ -396,10 +503,9 @@ export default function App() {
               />
             )}
 
-            {/* Expense Section (When 'all' or 'expenses') */}
-            {(activeViewTab === 'all' || activeViewTab === 'expenses') && (
+            {/* Expense Section (When in 'expense' tab) */}
+            {postingMenuTab === 'expense' && (
               <>
-                {/* 2. Category Breakdown Chart & Progress */}
                 <CategoryBreakdown
                   trip={activeTrip}
                   expenses={activeTripExpenses}
@@ -408,7 +514,6 @@ export default function App() {
                   language={language}
                 />
 
-                {/* 3. Detailed Expense Ledger with Search, Filter, Edit, Delete */}
                 <ExpenseList
                   trip={activeTrip}
                   expenses={activeTripExpenses}
@@ -531,6 +636,7 @@ export default function App() {
         }}
         onSave={handleSaveTrip}
         initialTrip={editingTrip}
+        defaultTabType={defaultTabTypeForModal}
         language={language}
       />
 
@@ -561,8 +667,14 @@ export default function App() {
         expenses={expenses}
         incomes={incomes}
         onRestoreData={handleRestoreData}
+        onResetToBlank={handleResetToBlank}
+        onRestoreDemo={handleRestoreDemo}
         language={language}
       />
+
+      {/* PWA Auto-Install Banner & Offline Connectivity Indicator */}
+      <AutoInstallBanner language={language} />
+      <OfflineIndicator language={language} />
     </div>
   );
 }
